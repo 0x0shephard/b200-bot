@@ -1,15 +1,15 @@
 {
-  "timestamp": "2025-12-23 20:46:02",
-  "provider": "Nebius",
+  "timestamp": "2025-12-23 20:49:42",
+  "provider": "HPC-AI",
   "providers": {
-    "Nebius": {
-      "name": "Nebius",
+    "HPC-AI": {
+      "name": "HPC-AI",
       "url": "",
       "variants": {
-        "NVIDIA HGX B200": {
+        "B200 (HPC-AI)": {
           "gpu_model": "B200",
           "gpu_memory": "180GB",
-          "price_per_hour": 5.5,
+          "price_per_hour": 1.49,
           "currency": "USD",
           "availability": "on-demand"
         }

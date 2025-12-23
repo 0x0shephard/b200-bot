@@ -1,14 +1,19 @@
 {
-  "timestamp": "2025-12-23 06:12:35",
+  "timestamp": "2025-12-23 20:42:49",
   "provider": "AWS",
-  "prices": {
-    "P6-B200 (AWS)": "$9.66/hr"
-  },
-  "notes": {
-    "instance_type": "P6-B200",
-    "gpu_model": "NVIDIA B200",
-    "gpu_count_per_instance": 8,
-    "pricing_type": "Capacity Blocks (reserved)",
-    "source": "https://aws.amazon.com/ec2/capacityblocks/pricing/"
+  "providers": {
+    "AWS": {
+      "name": "AWS",
+      "url": "",
+      "variants": {
+        "P6-B200 (AWS)": {
+          "gpu_model": "B200",
+          "gpu_memory": "180GB",
+          "price_per_hour": 9.66,
+          "currency": "USD",
+          "availability": "on-demand"
+        }
+      }
+    }
   }
 }
