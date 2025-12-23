@@ -1,15 +1,15 @@
 {
-  "timestamp": "2025-12-23 20:46:02",
-  "provider": "Nebius",
+  "timestamp": "2025-12-23 20:45:40",
+  "provider": "GreenAI Cloud",
   "providers": {
-    "Nebius": {
-      "name": "Nebius",
+    "GreenAI Cloud": {
+      "name": "GreenAI Cloud",
       "url": "",
       "variants": {
-        "NVIDIA HGX B200": {
+        "B200 (GreenAI Cloud)": {
           "gpu_model": "B200",
           "gpu_memory": "180GB",
-          "price_per_hour": 5.5,
+          "price_per_hour": 3.75,
           "currency": "USD",
           "availability": "on-demand"
         }

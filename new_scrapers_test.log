@@ -1,0 +1,537 @@
+Some characters could not be decoded, and were replaced with REPLACEMENT CHARACTER.
+Error sending stats to Plausible: error sending request for url (https://plausible.io/api/event)
+Some characters could not be decoded, and were replaced with REPLACEMENT CHARACTER.
+Some characters could not be decoded, and were replaced with REPLACEMENT CHARACTER.
+Some characters could not be decoded, and were replaced with REPLACEMENT CHARACTER.
+Some characters could not be decoded, and were replaced with REPLACEMENT CHARACTER.
+🚀 B200 GPU Pricing - Master Scraper
+================================================================================
+Running all provider scrapers...
+
+
+================================================================================
+🔄 Running AWS scraper...
+================================================================================
+🔍 Fetching AWS P6-B200 pricing...
+================================================================================
+
+📋 Method: AWS Pricing API
+    Trying API: https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/index.json
+      ✓ API accessible (not downloading full index due to size)
+      ⚠️  Full pricing API requires specialized filtering
+    Trying API: https://api.pricing.us-east-1.amazonaws.com/
+      Status 404
+   ❌ No valid prices found
+
+📋 Method: Capacity Blocks Page Scraping
+    Trying: https://aws.amazon.com/ec2/capacityblocks/pricing/
+      Content length: 16789
+      ✓ Found B200 content
+      Found 9 tables
+      📋 Processing table with B200 data
+         Row: u-p6e-gb200x72 Dallas Local Zone
+(US East N. Virginia) $761.904 ($10.582 USD) 72 x B200
+        Table ✓ P6-B200 (Multiple Regions) = $10.58/hr
+         Row: u-p6e-gb200x36 Dallas Local Zone
+(US East N. Virginia) $380.952 ($10.582 USD) 36 x B200
+      📋 Processing table with B200 data
+         Row: p6-b200.48xlarge US East (Ohio) $74.88 USD ($9.36 USD) 8 x B200
+        Table ✓ P6-B200 (US East (Ohio)) = $9.36/hr
+         Row: p6-b200.48xlarge US East (N. Virginia) $74.88 USD ($9.36 USD) 8 x B200
+        Table ✓ P6-B200 (US East (N. Virginia)) = $9.36/hr
+         Row: p6-b200.48xlarge US West (Oregon) $74.88 USD ($9.36 USD) 8 x B200
+        Table ✓ P6-B200 (US West (Oregon)) = $9.36/hr
+      📋 Processing table with B200 data
+   ✅ Found 4 B200 prices!
+
+   📊 Normalizing AWS P6-B200 pricing...
+      P6-B200 (Multiple Regions): $10.58/hr
+      P6-B200 (US East (Ohio)): $9.36/hr
+      P6-B200 (US East (N. Virginia)): $9.36/hr
+      P6-B200 (US West (Oregon)): $9.36/hr
+
+   ✅ Averaged 4 regional prices → $9.66/GPU
+
+✅ Final extraction: 1 B200 price variants
+✅ AWS scraper completed successfully
+   💾 Results saved to: aws_b200_prices.json
+
+================================================================================
+🔄 Running Civo scraper...
+================================================================================
+🔍 Fetching Civo B200 pricing...
+================================================================================
+
+📋 Method: Civo API
+    Trying API: https://api.civo.com/v2/sizes
+      Status 403
+    Trying API: https://api.civo.com/v2/gpu-instances
+      Status 404
+    Trying API: https://api.civo.com/v2/pricing
+      Status 404
+    Trying API: https://www.civo.com/api/v1/pricing
+      Status 404
+    Trying API: https://www.civo.com/api/pricing
+      Status 404
+   ❌ No valid prices found
+
+📋 Method: Pricing Page Scraping
+    Trying: https://www.civo.com/pricing
+      Content length: 22252
+      ✓ Found B200 content
+      📋 B200 mentions: 4
+         NVIDIA B200 Blackwell GPUs from $2.69 per GPU/hr
+         NVIDIA B200 GPU pricing
+         NVIDIA B200 GPU pricing
+         8 x NVIDIA B200 - 180GB
+      💰 Lines with B200 and $: 1
+         NVIDIA B200 Blackwell GPUs from $2.69 per GPU/hr
+        Pattern ✓ B200 = $27.92/hr
+   ✅ Found 1 B200 prices!
+
+   📊 Normalizing to per-GPU pricing...
+      B200: $27.92/hr → $27.92/GPU
+
+   ✅ Averaged 1 prices → $27.92/GPU
+
+✅ Final extraction: 1 B200 price variants
+✅ Civo scraper completed successfully
+   💾 Results saved to: civo_b200_prices.json
+
+================================================================================
+🔄 Running RunPod scraper...
+================================================================================
+🔍 Fetching RunPod B200 pricing...
+================================================================================
+
+📋 Method: GPU Pricing API
+    Trying API: https://api.runpod.io/graphql?api_key=public
+      ⚠️  Response is not JSON
+    Trying API: https://www.runpod.io/api/pricing
+      Status 404
+    Trying API: https://www.runpod.io/api/v1/gpu-types
+      Status 404
+    Trying API: https://api.runpod.io/v1/gpu-types
+      Status 404
+   ❌ No prices found
+
+📋 Method: Console API
+    Trying Console API: https://api.runpod.io/graphql
+      ⚠️  Error parsing response: Expecting value: line 1 column 1 (char 0)
+   ❌ No prices found
+
+📋 Method: Selenium Scraper
+    Setting up Selenium WebDriver...
+    Loading pricing page...
+    Waiting for dynamic content to load...
+    ✓ Page loaded, extracting prices...
+      Found 40 pricing items
+      Trying direct text search...
+        Selenium Text ✓ B200 = $5.98/hr
+    WebDriver closed
+   ✅ Found 1 B200 prices!
+✅ RunPod scraper completed successfully
+   💾 Results saved to: runpod_b200_prices.json
+
+================================================================================
+🔄 Running GreenAI Cloud scraper...
+================================================================================
+🔍 Fetching GreenAI Cloud B200 pricing...
+================================================================================
+
+📋 Method: Banner Scraping (HTML)
+    Trying: https://greenai.cloud/
+      Content length: 68742
+      ⚠️  No B200 content found
+   ❌ No valid prices found
+
+📋 Method: Selenium Scraper
+    Setting up Selenium WebDriver...
+    Loading pricing page...
+    Waiting for dynamic content to load...
+    ✓ Page loaded, content length: 7977
+      Found 110 elementor-heading-title elements
+         Banner text: Interested in B200 from NVIDIA ? – rates starting at 3,75 USD/GPU/H - by far the most competitive price on the market.  Contact us for further details
+        Banner ✓ B200 (GreenAI Cloud) = $3.75/hr
+    WebDriver closed
+   ✅ Found 1 B200 prices!
+
+✅ Final extraction: 1 B200 price variants
+✅ GreenAI Cloud scraper completed successfully
+   💾 Results saved to: greenai_cloud_b200_prices.json
+
+================================================================================
+🔄 Running Nebius scraper...
+================================================================================
+🔍 Fetching Nebius B200 pricing...
+================================================================================
+
+📋 Method: Pricing Page Scraping
+    Trying: https://nebius.com/prices
+      Content length: 24440
+      ⚠️  No B200 content found
+   ❌ No valid prices found
+
+📋 Method: Selenium Scraper
+    Setting up Selenium WebDriver...
+    Loading pricing page...
+    Waiting for dynamic content to load...
+    ✓ Page loaded, content length: 6064
+      Found 0 tables
+        Pattern ✓ NVIDIA HGX B200 = $5.50/hr
+      📋 Found GPU Instances section (257 chars)
+    WebDriver closed
+   ✅ Found 1 B200 prices!
+
+✅ Final extraction: 1 B200 price variants
+✅ Nebius scraper completed successfully
+   💾 Results saved to: nebius_b200_prices.json
+
+================================================================================
+🔄 Running Vultr scraper...
+================================================================================
+🔍 Fetching Vultr B200 pricing...
+================================================================================
+
+📋 Method: API Endpoint
+    Trying API: https://api.vultr.com/v2/plans
+      ✓ Got JSON response
+    Trying API: https://api.vultr.com/v2/plans-metal
+      ✓ Got JSON response
+    Trying API: https://www.vultr.com/api/v2/pricing
+      Status 404
+    Trying API: https://www.vultr.com/api/plans
+      Status 404
+   ❌ No prices found
+
+📋 Method: B200 Product Page
+    Trying: https://www.vultr.com/products/cloud-gpu/nvidia-b200/
+      ✓ Page contains B200 data
+      📋 Found 18 pricing items
+        Item ✓ B200 (Vultr) = $2.89/hr
+   ✅ Found 1 B200 prices!
+✅ Vultr scraper completed successfully
+   💾 Results saved to: vultr_b200_prices.json
+
+================================================================================
+🔄 Running CoreWeave scraper...
+================================================================================
+🔍 Fetching CoreWeave B200 pricing...
+================================================================================
+
+📋 Method: API Endpoint
+    Trying API: https://www.coreweave.com/api/pricing
+      Status 404
+    Trying API: https://api.coreweave.com/pricing
+      Status 404
+    Trying API: https://www.coreweave.com/api/v1/pricing
+      Status 404
+    Trying API: https://api.coreweave.com/v1/gpu-pricing
+      Status 404
+   ❌ No prices found
+
+📋 Method: Pricing Page
+    Trying: https://www.coreweave.com/pricing
+      ✓ Page contains B200 data
+      📋 Found 253 pricing items
+        Item ✓ B200 (CoreWeave) = $42.00/hr
+   ✅ Found 1 B200 prices!
+✅ CoreWeave scraper completed successfully
+   💾 Results saved to: coreweave_b200_prices.json
+
+================================================================================
+🔄 Running Cirrascale scraper...
+================================================================================
+🔍 Fetching Cirrascale B200 pricing...
+================================================================================
+
+📋 Method: API Endpoint
+    Trying API: https://www.cirrascale.com/api/pricing
+      Status 404
+    Trying API: https://api.cirrascale.com/pricing
+      Error: HTTPSConnectionPool(host='api.cirrascale.com', por...
+    Trying API: https://www.cirrascale.com/api/v1/pricing
+      Status 404
+   ❌ No prices found
+
+📋 Method: Pricing Page
+    Trying: https://www.cirrascale.com/pricing
+      ✓ Page contains B200 data
+      📋 Found 72 pricing items
+        Item ✓ B200 (Cirrascale) = $17.00/hr
+   ✅ Found 1 B200 prices!
+✅ Cirrascale scraper completed successfully
+   💾 Results saved to: cirrascale_b200_prices.json
+
+================================================================================
+🔄 Running Crusoe scraper...
+================================================================================
+🔍 Fetching Crusoe B200 pricing...
+================================================================================
+
+📋 Method: API Endpoint
+    Trying API: https://api.crusoe.ai/pricing
+      Status 404
+    Trying API: https://www.crusoe.ai/api/pricing
+      Status 404
+    Trying API: https://api.crusoe.ai/v1/pricing
+      Status 404
+    Trying API: https://www.crusoe.ai/api/v1/gpu-pricing
+      Status 404
+   ❌ No prices found
+
+📋 Method: Cloud Pricing Page
+    Trying: https://www.crusoe.ai/cloud/pricing
+      ✓ Page contains B200 data
+      📋 Found 240 pricing items
+        Item ✓ B200 (Crusoe) = $4.29/hr
+   ✅ Found 1 B200 prices!
+✅ Crusoe scraper completed successfully
+   💾 Results saved to: crusoe_b200_prices.json
+
+================================================================================
+🔄 Running ComputePrices scraper...
+================================================================================
+🔍 Fetching ComputePrices B200 pricing...
+================================================================================
+
+📋 Method: API Endpoint
+    Trying API: https://computeprices.com/api/gpus/b200
+      Status 404
+    Trying API: https://computeprices.com/api/pricing
+      Status 404
+    Trying API: https://api.computeprices.com/gpus/b200
+      Error: HTTPSConnectionPool(host='api.computeprices.com', ...
+   ❌ No prices found
+
+📋 Method: B200 Dedicated Page
+    Trying: https://computeprices.com/gpus/b200
+      ⚠️  Page doesn't contain B200 references
+    Trying: https://computeprices.com/gpu/b200
+      Status 404
+   ❌ No prices found
+
+📋 Method: Selenium Scraper
+    Setting up Selenium WebDriver...
+    Loading B200 page...
+    Waiting for dynamic content to load...
+    ✓ Page loaded, extracting prices...
+        Selenium ✓ B200 (ComputePrices) = $2.49/hr
+    WebDriver closed
+   ✅ Found 1 B200 prices!
+✅ ComputePrices scraper completed successfully
+   💾 Results saved to: computeprices_b200_prices.json
+
+================================================================================
+🔄 Running Hyperbolic AI scraper...
+================================================================================
+🔍 Fetching Hyperbolic AI B200 pricing...
+================================================================================
+
+📋 Method: API Endpoint
+    Trying API: https://api.hyperbolic.ai/marketplace
+      Error: HTTPSConnectionPool(host='api.hyperbolic.ai', port...
+    Trying API: https://www.hyperbolic.ai/api/marketplace
+      Status 404
+    Trying API: https://api.hyperbolic.ai/pricing
+      Error: HTTPSConnectionPool(host='api.hyperbolic.ai', port...
+   ❌ No prices found
+
+📋 Method: Marketplace Page
+    Trying: https://www.hyperbolic.ai/marketplace
+      ⚠️  Page doesn't contain B200 references
+    Trying: https://hyperbolic.ai/marketplace
+      ⚠️  Page doesn't contain B200 references
+   ❌ No prices found
+
+📋 Method: Selenium Scraper
+    Setting up Selenium WebDriver...
+    Loading marketplace page...
+    Waiting for dynamic content to load...
+    ✓ Page loaded, extracting prices...
+    WebDriver closed
+   ❌ No prices found
+
+❌ All methods failed - unable to extract B200 pricing
+⚠️  Hyperbolic AI scraper completed with no results
+
+================================================================================
+🔄 Running Together AI scraper...
+================================================================================
+🔍 Fetching Together AI B200 pricing...
+================================================================================
+
+📋 Method: Pricing Page
+      ✓ Page contains B200 data
+   ❌ No prices found
+
+📋 Method: Selenium
+    Setting up Selenium...
+   ❌ No prices found
+⚠️  Together AI scraper completed with no results
+
+================================================================================
+🔄 Running Modal scraper...
+================================================================================
+🔍 Fetching Modal B200 pricing...
+================================================================================
+
+📋 Method: Pricing Page
+      ✓ Page contains B200 data
+   ❌ No prices found
+
+📋 Method: Selenium
+    Setting up Selenium...
+   ❌ No prices found
+⚠️  Modal scraper completed with no results
+
+================================================================================
+🔄 Running Northflank scraper...
+================================================================================
+🔍 Fetching Northflank B200 pricing...
+================================================================================
+
+📋 Method: Pricing Page
+      ✓ Page contains B200 data
+   ❌ No prices found
+
+📋 Method: Selenium
+    Setting up Selenium...
+   ❌ No prices found
+⚠️  Northflank scraper completed with no results
+
+================================================================================
+🔄 Running Genesis Cloud scraper...
+================================================================================
+🔍 Fetching Genesis Cloud B200 pricing...
+================================================================================
+
+📋 Method: Pricing Page
+      ✓ Page contains B200 data
+   ❌ No prices found
+
+📋 Method: Selenium
+    Setting up Selenium...
+   ❌ No prices found
+⚠️  Genesis Cloud scraper completed with no results
+
+================================================================================
+🔄 Running HPC-AI scraper...
+================================================================================
+🔍 Fetching HPC-AI B200 pricing...
+================================================================================
+
+📋 Method: Homepage/Pricing
+      ✓ Page contains B200 data
+        ✓ B200 (HPC-AI) = $1.49/hr
+   ✅ Found 1 B200 prices!
+✅ HPC-AI scraper completed successfully
+   💾 Results saved to: hpc-ai_b200_prices.json
+
+================================================================================
+📊 SCRAPING SUMMARY
+================================================================================
+
+  Total Scrapers:     16
+  Successful:         11
+  Failed/No Data:     5
+
+  ✅ AWS                       (1 variants found)
+  ✅ Civo                      (1 variants found)
+  ✅ RunPod                    (1 variants found)
+  ✅ GreenAI Cloud             (1 variants found)
+  ✅ Nebius                    (1 variants found)
+  ✅ Vultr                     (1 variants found)
+  ✅ CoreWeave                 (1 variants found)
+  ✅ Cirrascale                (1 variants found)
+  ✅ Crusoe                    (1 variants found)
+  ✅ ComputePrices             (1 variants found)
+  ❌ Hyperbolic AI             (0 variants found)
+  ❌ Together AI               (0 variants found)
+  ❌ Modal                     (0 variants found)
+  ❌ Northflank                (0 variants found)
+  ❌ Genesis Cloud             (0 variants found)
+  ✅ HPC-AI                    (1 variants found)
+
+================================================================================
+🔄 Running price normalization...
+================================================================================
+📂 Found 12 B200 price files
+   ✓ Loaded: HPC-AI
+   ✓ Loaded: CoreWeave
+   ✓ Loaded: RunPod
+   ✓ Loaded: Nebius
+   ✓ Loaded: GreenAI Cloud
+   ✓ Loaded: ComputePrices
+   ✓ Loaded: Cirrascale
+   ✓ Loaded: Civo
+   ✓ Loaded: Vultr
+   ✓ Loaded: GreenAI Cloud
+   ✓ Loaded: AWS
+   ✓ Loaded: Crusoe
+
+================================================================================
+📊 B200 PRICE NORMALIZATION REPORT
+================================================================================
+
+Base Model: NVIDIA B200 (180GB HBM3e)
+
+Provider Prices (All normalized to per-GPU/hour):
+--------------------------------------------------------------------------------
+  HPC-AI               B200 (HPC-AI) (180GB)               $1.49/hr
+  ComputePrices        B200 (ComputePrices) (180GB)        $2.49/hr
+  Vultr                B200 (Vultr) (180GB)                $2.89/hr
+  GreenAI Cloud        B200 (GreenAI Cloud) (180GB)        $3.75/hr
+  Crusoe               B200 (Crusoe) (180GB)               $4.29/hr
+  Nebius               NVIDIA HGX B200 (180GB)             $5.50/hr
+  RunPod               B200 (180GB)                        $5.98/hr
+  AWS                  P6-B200 (AWS) (180GB)               $9.66/hr
+  Cirrascale           B200 (Cirrascale) (180GB)           $17.00/hr
+  Civo                 B200 (Civo) (180GB)                 $27.92/hr
+  CoreWeave            B200 (CoreWeave) (180GB)            $42.00/hr
+
+--------------------------------------------------------------------------------
+📈 PRICING STATISTICS
+--------------------------------------------------------------------------------
+  Total Providers: 11
+  Lowest Price:    $1.49/hr (HPC-AI)
+  Highest Price:   $42.00/hr (CoreWeave)
+  Average Price:   $11.18/hr
+  Median Price:    $5.50/hr
+  Price Range:     $40.51/hr
+
+--------------------------------------------------------------------------------
+📉 DEVIATION FROM AVERAGE PRICE
+--------------------------------------------------------------------------------
+  🟡 AWS                  $9.66/hr  (-1.52 / -13.6%)
+  🔴 RunPod               $5.98/hr  (-5.20 / -46.5%)
+  🔴 Nebius               $5.50/hr  (-5.68 / -50.8%)
+  🔴 Cirrascale           $17.00/hr  (++5.82 / ++52.1%)
+  🔴 Crusoe               $4.29/hr  (-6.89 / -61.6%)
+  🔴 GreenAI Cloud        $3.75/hr  (-7.43 / -66.5%)
+  🔴 Vultr                $2.89/hr  (-8.29 / -74.1%)
+  🔴 ComputePrices        $2.49/hr  (-8.69 / -77.7%)
+  🔴 HPC-AI               $1.49/hr  (-9.69 / -86.7%)
+  🔴 Civo                 $27.92/hr  (++16.74 / ++149.8%)
+  🔴 CoreWeave            $42.00/hr  (++30.82 / ++275.7%)
+
+================================================================================
+🔄 B200 vs H100 PERFORMANCE COMPARISON
+================================================================================
+
+  H100 Typical Price:        $3.50/hr
+  Performance Multiplier:    2.00x
+  Expected B200 Price:       $7.00/hr
+  Actual B200 Average:       $11.18/hr
+
+  ⚠️  B200 is 37.4% less cost-efficient than expected
+
+================================================================================
+💾 Normalized report saved to: b200_normalized_prices.json
+================================================================================
+
+✅ Normalization complete!
+
+================================================================================
+✅ All operations complete!
+================================================================================
