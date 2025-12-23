@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-12-23 05:44:28",
+  "provider": "Civo",
+  "prices": {
+    "B200 (Civo)": "$27.92/hr"
+  },
+  "notes": {
+    "gpu_model": "B200",
+    "pricing_type": "on-demand per-GPU (normalized)",
+    "configurations": "8x GPU configuration available"
+  }
+}

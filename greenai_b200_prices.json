@@ -1,0 +1,13 @@
+{
+  "timestamp": "2025-12-23 06:17:54",
+  "provider": "GreenAI Cloud",
+  "prices": {
+    "B200 (GreenAI Cloud)": "$3.75/hr"
+  },
+  "notes": {
+    "gpu_model": "NVIDIA B200",
+    "pricing_type": "on-demand per-GPU-hour",
+    "source": "https://greenai.cloud/",
+    "location": "Sweden (EU data protection compliant)"
+  }
+}

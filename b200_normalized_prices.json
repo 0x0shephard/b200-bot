@@ -1,0 +1,55 @@
+{
+  "timestamp": "2025-12-23 06:21:52",
+  "base_model": {
+    "name": "NVIDIA B200",
+    "memory_gb": 180,
+    "architecture": "Blackwell",
+    "relative_performance": 1.0
+  },
+  "statistics": {
+    "count": 5,
+    "min": 3.75,
+    "max": 27.92,
+    "average": 10.562000000000001,
+    "median": 5.98,
+    "most_expensive_provider": "Civo",
+    "cheapest_provider": "GreenAI Cloud"
+  },
+  "providers": {
+    "AWS": {
+      "original_price": 9.66,
+      "normalized_price": 9.66,
+      "variant": "P6-B200 (AWS)",
+      "source": "https://aws.amazon.com/ec2/capacityblocks/pricing/"
+    },
+    "Civo": {
+      "original_price": 27.92,
+      "normalized_price": 27.92,
+      "variant": "B200 (Civo)",
+      "source": ""
+    },
+    "GreenAI Cloud": {
+      "original_price": 3.75,
+      "normalized_price": 3.75,
+      "variant": "B200 (GreenAI Cloud)",
+      "source": "https://greenai.cloud/"
+    },
+    "Nebius": {
+      "original_price": 5.5,
+      "normalized_price": 5.5,
+      "variant": "NVIDIA HGX B200",
+      "source": "https://nebius.com/prices"
+    },
+    "RunPod": {
+      "original_price": 5.98,
+      "normalized_price": 5.98,
+      "variant": "B200 (180GB)",
+      "source": "https://www.runpod.io"
+    }
+  },
+  "notes": {
+    "all_prices_per_gpu_hour": true,
+    "base_model": "NVIDIA B200 180GB HBM3e",
+    "normalization": "All prices are for identical B200 GPU model"
+  }
+}

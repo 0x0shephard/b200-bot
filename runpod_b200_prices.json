@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-12-23 05:37:00",
+  "provider": "RunPod",
+  "providers": {
+    "RunPod": {
+      "name": "RunPod",
+      "url": "https://www.runpod.io",
+      "variants": {
+        "B200": {
+          "gpu_model": "B200",
+          "gpu_memory": "180GB",
+          "price_per_hour": 5.98,
+          "currency": "USD",
+          "availability": "on-demand"
+        }
+      }
+    }
+  }
+}
