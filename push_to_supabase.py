@@ -40,7 +40,7 @@ def load_index_data(filepath: str = "b200_weighted_index.json") -> Optional[Dict
 
 
 def push_to_supabase(index_data: Dict) -> bool:
-    """Push B200 index data to Supabase"""
+    """Push B200 index data to Supabase with price validation"""
     
     # Get Supabase credentials from environment
     supabase_url = os.getenv('SUPABASE_URL')
@@ -65,10 +65,20 @@ def push_to_supabase(index_data: Dict) -> bool:
         # Initialize Supabase client
         supabase: Client = create_client(supabase_url, supabase_key)
         
+        # Get new price
+        new_price = index_data.get("final_index_price")
+        
+        # Validate price against historical data
+        if not validate_price(supabase, new_price):
+            print("\n❌ Price validation failed - not pushing to Supabase")
+            print("   The new price is outside the acceptable range.")
+            print("   This may indicate a scraping error or market anomaly.")
+            return False
+        
         # Prepare data for insertion
         insert_data = {
             "timestamp": index_data.get("timestamp"),
-            "index_price": index_data.get("final_index_price"),
+            "index_price": new_price,
             "hyperscaler_component": index_data.get("hyperscaler_component"),
             "non_hyperscaler_component": index_data.get("non_hyperscaler_component"),
             "metadata": {
@@ -99,6 +109,64 @@ def push_to_supabase(index_data: Dict) -> bool:
         import traceback
         traceback.print_exc()
         return False
+
+
+def validate_price(supabase: 'Client', new_price: float, tolerance: float = 0.25) -> bool:
+    """
+    Validate that the new price is within acceptable range of historical prices.
+    
+    Args:
+        supabase: Supabase client
+        new_price: New price to validate
+        tolerance: Acceptable deviation (default 20% = 0.20)
+    
+    Returns:
+        True if price is valid, False otherwise
+    """
+    try:
+        # Get last 2 prices from Supabase
+        response = supabase.table('b200_index_prices')\
+            .select('index_price')\
+            .order('created_at', desc=True)\
+            .limit(2)\
+            .execute()
+        
+        if not response.data or len(response.data) < 2:
+            print(f"\n⚠️  Not enough historical data for validation (found {len(response.data) if response.data else 0} records)")
+            print(f"   Allowing push for initial data collection...")
+            return True
+        
+        # Calculate average of last 2 prices
+        last_prices = [float(record['index_price']) for record in response.data]
+        avg_price = sum(last_prices) / len(last_prices)
+        
+        # Calculate acceptable range (±20%)
+        lower_bound = avg_price * (1 - tolerance)
+        upper_bound = avg_price * (1 + tolerance)
+        
+        # Check if new price is within range
+        is_valid = lower_bound <= new_price <= upper_bound
+        
+        # Display validation info
+        print(f"\n🔍 Price Validation Check:")
+        print(f"   Last 2 Prices: ${last_prices[0]:.2f}, ${last_prices[1]:.2f}")
+        print(f"   Average: ${avg_price:.2f}")
+        print(f"   Acceptable Range: ${lower_bound:.2f} - ${upper_bound:.2f} (±{tolerance*100:.0f}%)")
+        print(f"   New Price: ${new_price:.2f}")
+        
+        if is_valid:
+            deviation_pct = ((new_price - avg_price) / avg_price) * 100
+            print(f"   ✅ VALID - Deviation: {deviation_pct:+.1f}%")
+        else:
+            deviation_pct = ((new_price - avg_price) / avg_price) * 100
+            print(f"   ❌ INVALID - Deviation: {deviation_pct:+.1f}% (exceeds ±{tolerance*100:.0f}%)")
+        
+        return is_valid
+        
+    except Exception as e:
+        print(f"\n⚠️  Price validation error: {e}")
+        print(f"   Allowing push anyway...")
+        return True  # Allow push if validation fails (don't block on errors)
 
 
 def verify_push(supabase_url: str, supabase_key: str) -> bool:
