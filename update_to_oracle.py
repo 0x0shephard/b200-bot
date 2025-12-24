@@ -14,13 +14,10 @@ from web3 import Web3
 load_dotenv()
 
 # Configuration
-SEPOLIA_RPC_URL = os.getenv("SEPOLIA_RPC_URL", "https://rpc.sepolia.org")
+SEPOLIA_RPC_URL = os.getenv("SEPOLIA_RPC_URL") or "https://rpc.sepolia.org"
 PRIVATE_KEY = os.getenv("ORACLE_UPDATER_PRIVATE_KEY") or os.getenv("PRIVATE_KEY")
-MULTI_ASSET_ORACLE_ADDRESS = os.getenv(
-    "MULTI_ASSET_ORACLE_ADDRESS",
-    "0xB44d652354d12Ac56b83112c6ece1fa2ccEfc683",  # MultiAssetOracle on Sepolia
-)
-PRICE_DECIMALS = int(os.getenv("ORACLE_DECIMALS", "18"))
+MULTI_ASSET_ORACLE_ADDRESS = os.getenv("MULTI_ASSET_ORACLE_ADDRESS") or "0xB44d652354d12Ac56b83112c6ece1fa2ccEfc683"
+PRICE_DECIMALS = int(os.getenv("ORACLE_DECIMALS") or "18")
 
 # B200 Asset ID (keccak256("B200_HOURLY"))
 B200_ASSET_ID = "0xc087ecb79f2df80d1dbf828d80ca18ff0b385e5806b3ec42da93e23eb0136348"
