@@ -1,0 +1,102 @@
+name: Scrape B200 Prices and Upload to Supabase
+
+on:
+  # Run manually via workflow dispatch
+  workflow_dispatch:
+
+  # Run on a schedule (every 6 hours)
+  schedule:
+    - cron: '0 */6 * * *'  # At minute 0 past every 6th hour
+
+  # Run on push to main branches (optional - remove if not needed)
+  push:
+    branches:
+      - master
+      - update1
+
+jobs:
+  scrape-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install system dependencies for Selenium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip xvfb
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Set up ChromeDriver
+        uses: nanasess/setup-chromedriver@v2
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install python-dotenv supabase
+
+      - name: Run all scrapers
+        run: |
+          echo "🚀 Running all B200 scrapers..."
+          python run_all_scrapers.py
+        continue-on-error: false
+
+      - name: Verify scraper outputs
+        run: |
+          echo "📊 Checking generated JSON files..."
+          ls -lh *_b200_prices.json 2>/dev/null || echo "⚠️  No price files found"
+
+          if [ -f "b200_normalized_prices.json" ]; then
+            echo "✅ Normalized prices file exists"
+          else
+            echo "❌ Normalized prices file missing"
+          fi
+
+          if [ -f "b200_weighted_index.json" ]; then
+            echo "✅ Weighted index file exists"
+            cat b200_weighted_index.json | python -m json.tool | head -20
+          else
+            echo "❌ Weighted index file missing"
+          fi
+
+      - name: Push to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "📤 Pushing data to Supabase..."
+          python push_to_supabase.py
+
+      - name: Upload artifacts (optional - for debugging)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b200-pricing-data-${{ github.run_number }}
+          path: |
+            *_b200_prices.json
+            b200_normalized_prices.json
+            b200_weighted_index.json
+          retention-days: 7
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "✅ Workflow completed successfully!"
+          echo "📊 Data has been scraped and uploaded to Supabase"
+
+          if [ -f "b200_weighted_index.json" ]; then
+            INDEX_PRICE=$(python -c "import json; data=json.load(open('b200_weighted_index.json')); print(f\"\${data['final_index_price']:.2f}\")")
+            echo "💰 Current B200 Weighted Index: $INDEX_PRICE/hr"
+          fi
