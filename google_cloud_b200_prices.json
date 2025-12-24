@@ -1,15 +1,15 @@
 {
-  "timestamp": "2025-12-24 17:16:50",
-  "provider": "CoreWeave",
+  "timestamp": "2025-12-24 17:18:13",
+  "provider": "Google Cloud",
   "providers": {
-    "CoreWeave": {
-      "name": "CoreWeave",
+    "Google Cloud": {
+      "name": "Google Cloud",
       "url": "",
       "variants": {
-        "B200 (CoreWeave)": {
+        "A4 B200 (Google Cloud)": {
           "gpu_model": "B200",
           "gpu_memory": "180GB",
-          "price_per_hour": 42.0,
+          "price_per_hour": 18.5,
           "currency": "USD",
           "availability": "on-demand"
         }

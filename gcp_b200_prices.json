@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-12-24 17:09:56",
+  "provider": "Google Cloud",
+  "prices": {
+    "A4 B200 (Google Cloud)": "$18.50/hr"
+  },
+  "notes": {
+    "instance_type": "A4 VM",
+    "gpu_model": "NVIDIA B200",
+    "gpu_count_per_instance": 8,
+    "pricing_type": "On-demand (estimated)",
+    "source": "https://cloud.google.com/compute/gpus-pricing",
+    "note": "A4X VMs with 72x B200 also available"
+  }
+}

@@ -1,0 +1,182 @@
+{
+  "timestamp": "2025-12-24 17:15:05",
+  "final_index_price": 7.15,
+  "hyperscaler_component": 5.2515,
+  "non_hyperscaler_component": 1.8983,
+  "hyperscaler_details": [
+    {
+      "provider": "AWS",
+      "effective_price": 3.874294322165306,
+      "relative_weight": 0.4,
+      "absolute_weight": 0.26,
+      "weighted_contribution": 1.0073165237629795
+    },
+    {
+      "provider": "Civo",
+      "effective_price": 9.984488880028604,
+      "relative_weight": 0.2,
+      "absolute_weight": 0.13,
+      "weighted_contribution": 1.2979835544037186
+    },
+    {
+      "provider": "CoreWeave",
+      "effective_price": 18.0802849687931,
+      "relative_weight": 0.15,
+      "absolute_weight": 0.0975,
+      "weighted_contribution": 1.7628277844573275
+    },
+    {
+      "provider": "Google Cloud",
+      "effective_price": 7.28237309065232,
+      "relative_weight": 0.25,
+      "absolute_weight": 0.1625,
+      "weighted_contribution": 1.1833856272310022
+    }
+  ],
+  "non_hyperscaler_details": [
+    {
+      "provider": "Cirrascale",
+      "effective_price": 17.0,
+      "absolute_weight": 0.04375,
+      "weighted_contribution": 0.7437499999999999
+    },
+    {
+      "provider": "ComputePrices",
+      "effective_price": 2.49,
+      "absolute_weight": 0.04375,
+      "weighted_contribution": 0.1089375
+    },
+    {
+      "provider": "Crusoe",
+      "effective_price": 4.29,
+      "absolute_weight": 0.04375,
+      "weighted_contribution": 0.18768749999999998
+    },
+    {
+      "provider": "GreenAI Cloud",
+      "effective_price": 3.75,
+      "absolute_weight": 0.04375,
+      "weighted_contribution": 0.1640625
+    },
+    {
+      "provider": "HPC-AI",
+      "effective_price": 1.49,
+      "absolute_weight": 0.04375,
+      "weighted_contribution": 0.0651875
+    },
+    {
+      "provider": "Nebius",
+      "effective_price": 5.5,
+      "absolute_weight": 0.04375,
+      "weighted_contribution": 0.24062499999999998
+    },
+    {
+      "provider": "RunPod",
+      "effective_price": 5.98,
+      "absolute_weight": 0.04375,
+      "weighted_contribution": 0.261625
+    },
+    {
+      "provider": "Vultr",
+      "effective_price": 2.89,
+      "absolute_weight": 0.04375,
+      "weighted_contribution": 0.1264375
+    }
+  ],
+  "weights": {
+    "hyperscaler_total": 0.65,
+    "non_hyperscaler_total": 0.35,
+    "hyperscaler_individual": {
+      "AWS": 0.4,
+      "Google Cloud": 0.25,
+      "Civo": 0.2,
+      "CoreWeave": 0.15
+    }
+  },
+  "all_provider_data": {
+    "AWS": {
+      "original_price": 9.66,
+      "discount_rate": 0.7486679189744687,
+      "discounted_price": 2.427867902706632,
+      "effective_price": 3.874294322165306,
+      "is_hyperscaler": true
+    },
+    "Cirrascale": {
+      "original_price": 17.0,
+      "discount_rate": 0.0,
+      "discounted_price": 17.0,
+      "effective_price": 17.0,
+      "is_hyperscaler": false
+    },
+    "Civo": {
+      "original_price": 27.92,
+      "discount_rate": 0.8029867084514415,
+      "discounted_price": 5.500611100035754,
+      "effective_price": 9.984488880028604,
+      "is_hyperscaler": true
+    },
+    "ComputePrices": {
+      "original_price": 2.49,
+      "discount_rate": 0.0,
+      "discounted_price": 2.49,
+      "effective_price": 2.49,
+      "is_hyperscaler": false
+    },
+    "CoreWeave": {
+      "original_price": 42.0,
+      "discount_rate": 0.7118962806906816,
+      "discounted_price": 12.100356210991375,
+      "effective_price": 18.0802849687931,
+      "is_hyperscaler": true
+    },
+    "Crusoe": {
+      "original_price": 4.29,
+      "discount_rate": 0.0,
+      "discounted_price": 4.29,
+      "effective_price": 4.29,
+      "is_hyperscaler": false
+    },
+    "Google Cloud": {
+      "original_price": 18.5,
+      "discount_rate": 0.7579477641451136,
+      "discounted_price": 4.477966363315399,
+      "effective_price": 7.28237309065232,
+      "is_hyperscaler": true
+    },
+    "GreenAI Cloud": {
+      "original_price": 3.75,
+      "discount_rate": 0.0,
+      "discounted_price": 3.75,
+      "effective_price": 3.75,
+      "is_hyperscaler": false
+    },
+    "HPC-AI": {
+      "original_price": 1.49,
+      "discount_rate": 0.0,
+      "discounted_price": 1.49,
+      "effective_price": 1.49,
+      "is_hyperscaler": false
+    },
+    "Nebius": {
+      "original_price": 5.5,
+      "discount_rate": 0.0,
+      "discounted_price": 5.5,
+      "effective_price": 5.5,
+      "is_hyperscaler": false
+    },
+    "RunPod": {
+      "original_price": 5.98,
+      "discount_rate": 0.0,
+      "discounted_price": 5.98,
+      "effective_price": 5.98,
+      "is_hyperscaler": false
+    },
+    "Vultr": {
+      "original_price": 2.89,
+      "discount_rate": 0.0,
+      "discounted_price": 2.89,
+      "effective_price": 2.89,
+      "is_hyperscaler": false
+    }
+  }
+}

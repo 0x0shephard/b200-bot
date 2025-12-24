@@ -1,0 +1,38 @@
+# B200 Environment Files
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Requirements and setup files
+requirements.txt
+requirements_supabase.txt
+setup_b200_table.sql
+
+# Documentation (markdown files)
+*.md
+SUPABASE_INTEGRATION.md
+README.md

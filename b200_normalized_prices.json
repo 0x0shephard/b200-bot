@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-23 21:20:57",
+  "timestamp": "2025-12-24 17:18:15",
   "base_model": {
     "name": "NVIDIA B200",
     "memory_gb": 180,
@@ -7,49 +7,19 @@
     "relative_performance": 1.0
   },
   "statistics": {
-    "count": 11,
+    "count": 12,
     "min": 1.49,
     "max": 42.0,
-    "average": 11.17909090909091,
-    "median": 5.5,
-    "cheapest_provider": "HPC-AI",
-    "most_expensive_provider": "CoreWeave"
+    "average": 11.789166666666667,
+    "median": 5.98,
+    "most_expensive_provider": "CoreWeave",
+    "cheapest_provider": "HPC-AI"
   },
   "providers": {
-    "HPC-AI": {
-      "original_price": 1.49,
-      "normalized_price": 1.49,
-      "variant": "B200 (HPC-AI) (180GB)",
-      "source": ""
-    },
-    "CoreWeave": {
-      "original_price": 42.0,
-      "normalized_price": 42.0,
-      "variant": "B200 (CoreWeave) (180GB)",
-      "source": ""
-    },
-    "RunPod": {
-      "original_price": 5.98,
-      "normalized_price": 5.98,
-      "variant": "B200 (180GB)",
-      "source": ""
-    },
-    "Nebius": {
-      "original_price": 5.5,
-      "normalized_price": 5.5,
-      "variant": "NVIDIA HGX B200 (180GB)",
-      "source": ""
-    },
-    "GreenAI Cloud": {
-      "original_price": 3.75,
-      "normalized_price": 3.75,
-      "variant": "B200 (GreenAI Cloud) (180GB)",
-      "source": ""
-    },
-    "ComputePrices": {
-      "original_price": 2.49,
-      "normalized_price": 2.49,
-      "variant": "B200 (ComputePrices) (180GB)",
+    "AWS": {
+      "original_price": 9.66,
+      "normalized_price": 9.66,
+      "variant": "P6-B200 (AWS) (180GB)",
       "source": ""
     },
     "Cirrascale": {
@@ -64,22 +34,58 @@
       "variant": "B200 (Civo) (180GB)",
       "source": ""
     },
-    "Vultr": {
-      "original_price": 2.89,
-      "normalized_price": 2.89,
-      "variant": "B200 (Vultr) (180GB)",
+    "ComputePrices": {
+      "original_price": 2.49,
+      "normalized_price": 2.49,
+      "variant": "B200 (ComputePrices) (180GB)",
       "source": ""
     },
-    "AWS": {
-      "original_price": 9.66,
-      "normalized_price": 9.66,
-      "variant": "P6-B200 (AWS) (180GB)",
+    "CoreWeave": {
+      "original_price": 42.0,
+      "normalized_price": 42.0,
+      "variant": "B200 (CoreWeave) (180GB)",
       "source": ""
     },
     "Crusoe": {
       "original_price": 4.29,
       "normalized_price": 4.29,
       "variant": "B200 (Crusoe) (180GB)",
+      "source": ""
+    },
+    "Google Cloud": {
+      "original_price": 18.5,
+      "normalized_price": 18.5,
+      "variant": "A4 B200 (Google Cloud) (180GB)",
+      "source": ""
+    },
+    "GreenAI Cloud": {
+      "original_price": 3.75,
+      "normalized_price": 3.75,
+      "variant": "B200 (GreenAI Cloud) (180GB)",
+      "source": ""
+    },
+    "HPC-AI": {
+      "original_price": 1.49,
+      "normalized_price": 1.49,
+      "variant": "B200 (HPC-AI) (180GB)",
+      "source": ""
+    },
+    "Nebius": {
+      "original_price": 5.5,
+      "normalized_price": 5.5,
+      "variant": "NVIDIA HGX B200 (180GB)",
+      "source": ""
+    },
+    "RunPod": {
+      "original_price": 5.98,
+      "normalized_price": 5.98,
+      "variant": "B200 (180GB)",
+      "source": ""
+    },
+    "Vultr": {
+      "original_price": 2.89,
+      "normalized_price": 2.89,
+      "variant": "B200 (Vultr) (180GB)",
       "source": ""
     }
   },
