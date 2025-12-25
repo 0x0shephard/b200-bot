@@ -52,6 +52,12 @@ jobs:
           python run_all_scrapers.py
         continue-on-error: false
 
+      - name: Calculate weighted index
+        run: |
+          echo "📊 Calculating B200 weighted index..."
+          python calculate_b200_index.py
+        continue-on-error: false
+
       - name: Verify scraper outputs
         run: |
           echo "📊 Checking generated JSON files..."
