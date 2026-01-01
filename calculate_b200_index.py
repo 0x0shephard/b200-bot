@@ -3,18 +3,17 @@
 B200 GPU Weighted Index Calculator
 
 Calculates a weighted B200 GPU index price based on:
-1. Hyperscalers (AWS, Civo, CoreWeave) with 70-85% discounts
+1. Hyperscalers (AWS, Google Cloud, CoreWeave) with 70-85% discounts
    - These providers sell 80% at discounted rates, 20% at full price
-2. Non-hyperscalers at full price
+   - Weights based on quarterly B200 revenue from research
+2. Non-hyperscalers at full price (weighted by revenue)
 3. Weighting: 65% hyperscalers, 35% non-hyperscalers
 
-Hyperscaler Weights (out of 65%):
-- AWS: Highest weight
-- Civo: Medium weight
-- CoreWeave: Lower weight
-
-Non-hyperscaler Weights (out of 35%):
-- Equal distribution among available providers
+Revenue Source: B200 Revenue Research (Q3 2025)
+- AWS: $1,300M quarterly B200 revenue
+- CoreWeave: $300M quarterly B200 revenue
+- Google Cloud: Estimated $500M (major hyperscaler, no public B200-specific data)
+- Nebius: $73M, Crusoe: $45M, HPC-AI: $5.1M, Vultr: $4.5M, etc.
 """
 
 import json
@@ -24,13 +23,14 @@ from typing import Dict, List, Tuple
 
 
 class B200IndexCalculator:
-    """Calculate weighted B200 GPU index price"""
+    """Calculate weighted B200 GPU index price based on revenue"""
     
     def __init__(self, b200_dir: str = "."):
         self.b200_dir = Path(b200_dir)
         
-        # Define hyperscalers (4 major cloud providers)
-        self.hyperscalers = ["AWS", "Google Cloud", "Civo", "CoreWeave"]
+        # Define hyperscalers (4 major cloud providers - Civo moved to non-hyperscaler)
+        # Based on B200 Revenue Research: AWS, Oracle, Google Cloud, CoreWeave
+        self.hyperscalers = ["AWS", "Oracle", "Google Cloud", "CoreWeave"]
         
         # Hyperscaler discount range (70-85%)
         self.discount_min = 0.70
@@ -40,13 +40,34 @@ class B200IndexCalculator:
         self.hyperscaler_total_weight = 0.65  # 65%
         self.non_hyperscaler_total_weight = 0.35  # 35%
         
-        # Hyperscaler individual weights (must sum to 1.0)
-        # AWS gets most weight, then Google Cloud, then Civo and CoreWeave
+        # Hyperscaler individual weights based on B200 revenue (must sum to 1.0)
+        # Revenue from B200 Revenue Research (Q3 2025 quarterly):
+        # - AWS: $1,300M
+        # - Oracle: $730M
+        # - Google Cloud: $500M (estimated - no public B200 specific data)
+        # - CoreWeave: $300M
+        # Total hyperscaler revenue: $2,830M
         self.hyperscaler_weights = {
-            "AWS": 0.40,           # 40% of hyperscaler weight (26.0% of total)
-            "Google Cloud": 0.25,  # 25% of hyperscaler weight (16.25% of total)
-            "Civo": 0.20,          # 20% of hyperscaler weight (13.0% of total)
-            "CoreWeave": 0.15,     # 15% of hyperscaler weight (9.75% of total)
+            "AWS": 0.46,           # $1300M / $2830M ≈ 46% of hyperscaler weight
+            "Oracle": 0.26,        # $730M / $2830M ≈ 26% of hyperscaler weight
+            "Google Cloud": 0.18,  # $500M / $2830M ≈ 18% of hyperscaler weight
+            "CoreWeave": 0.10,     # $300M / $2830M ≈ 10% of hyperscaler weight
+        }
+        
+        # Non-hyperscaler weights based on B200 revenue (must sum to 1.0)
+        # Revenue data from research: Nebius $73M, Crusoe $45M, HPC-AI $5.1M, Vultr $4.5M,
+        # RunPod $0.6M, Cirrascale $0.56M, GreenAI $0.47M, Civo $0.4M, ComputePrices ~$0.1M (est)
+        # Total: ~$129.73M
+        self.non_hyperscaler_weights = {
+            "Nebius": 0.56,         # $73M / $129.73M ≈ 56%
+            "Crusoe": 0.35,         # $45M / $129.73M ≈ 35%
+            "HPC-AI": 0.04,         # $5.1M / $129.73M ≈ 4%
+            "Vultr": 0.035,         # $4.5M / $129.73M ≈ 3.5%
+            "Civo": 0.003,          # $0.4M - now non-hyperscaler
+            "RunPod": 0.005,        # $0.6M
+            "Cirrascale": 0.004,    # $0.56M
+            "GreenAI Cloud": 0.003, # $0.47M
+            "ComputePrices": 0.001, # Est ~$0.1M (aggregator)
         }
     
     def load_all_prices(self) -> Dict[str, float]:
@@ -189,21 +210,23 @@ class B200IndexCalculator:
         non_hyperscaler_details = []
         
         if non_hyperscaler_prices:
-            # Equal distribution among non-hyperscalers
-            equal_weight = self.non_hyperscaler_total_weight / len(non_hyperscaler_prices)
-            
+            # Use revenue-based weights for non-hyperscalers
             for provider, data in non_hyperscaler_prices.items():
-                weighted_price = data["effective_price"] * equal_weight
+                # Get weight from revenue-based weights, default to 0.01 if not defined
+                individual_weight = self.non_hyperscaler_weights.get(provider, 0.01)
+                absolute_weight = individual_weight * self.non_hyperscaler_total_weight
+                weighted_price = data["effective_price"] * absolute_weight
                 
                 non_hyperscaler_weighted_sum += weighted_price
                 non_hyperscaler_details.append({
                     "provider": provider,
                     "effective_price": data["effective_price"],
-                    "absolute_weight": equal_weight,
+                    "relative_weight": individual_weight,
+                    "absolute_weight": absolute_weight,
                     "weighted_contribution": weighted_price
                 })
                 
-                print(f"{provider:20s} ${data['effective_price']:6.2f}/hr × {equal_weight*100:5.1f}% = ${weighted_price:.4f}")
+                print(f"{provider:20s} ${data['effective_price']:6.2f}/hr × {absolute_weight*100:5.2f}% = ${weighted_price:.4f}")
             
             print(f"{'':20s} {'':11s} {'':7s}   {'─'*20}")
             print(f"{'Non-Hyperscaler Subtotal':20s} {'':11s} {'':7s}   ${non_hyperscaler_weighted_sum:.4f}")

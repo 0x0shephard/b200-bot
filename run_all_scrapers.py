@@ -20,6 +20,7 @@ from crusoe_b200_scraper import CrusoeB200Scraper
 from computeprices_b200_scraper import ComputePricesB200Scraper
 from hpcai_b200_scraper import HPCAIB200Scraper
 from gcp_b200_scraper import GCPB200Scraper
+from oracle_b200_scraper import OracleB200Scraper
 
 # Import normalization script
 from normalize_b200_prices import B200PriceNormalizer
@@ -97,7 +98,7 @@ def main():
     print("Running all provider scrapers...")
     print()
 
-    # Define all scrapers (12 providers with verified B200 pricing)
+    # Define all scrapers (13 providers with verified B200 pricing)
     scrapers = [
         # Original batch (5)
         (AWSB200Scraper, "AWS"),
@@ -112,10 +113,11 @@ def main():
         (CirrascaleB200Scraper, "Cirrascale"),
         (CrusoeB200Scraper, "Crusoe"),
 
-        # Third batch (3)
+        # Third batch (4)
         (ComputePricesB200Scraper, "ComputePrices"),
         (HPCAIB200Scraper, "HPC-AI"),
         (GCPB200Scraper, "Google Cloud"),
+        (OracleB200Scraper, "Oracle"),
     ]
 
     results = []
