@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Update oracle prices for H200 provider-specific markets (Part 1).
+"""Update oracle prices for H200 provider-specific markets (Part 2).
 
 This script updates the MultiAssetOracle with current market prices for:
-- Oracle Cloud H200: $6.47/hour
-- AWS H200: $4.04/hour
+- CoreWeave H200: $14.53/hour
+- Google Cloud H200: $6.60/hour
 
 Usage:
-    python scripts/update_h200_provider_prices.py
-    python scripts/update_h200_provider_prices.py --oracle-h200 6.50 --aws-h200 4.10
+    python scripts/update_h200_provider_prices_part2.py
+    python scripts/update_h200_provider_prices_part2.py --coreweave-h200 14.00 --gcp-h200 6.50
     python scripts/update_h200_provider_prices.py --all 5.00  # Set all to same price
 """
 
@@ -32,16 +32,16 @@ MULTI_ASSET_ORACLE_ADDRESS = os.getenv(
     "0xB44d652354d12Ac56b83112c6ece1fa2ccEfc683",
 )
 
-# Asset IDs (keccak256 of asset names) - Part 1
+# Asset IDs (keccak256 of asset names) - Part 2
 ASSET_IDS = {
-    "ORACLE_H200": "0xf162ee5639707284e5b6a23eeb0b5d6627a935f1ff571463d1eb29e4e2800e6c",
-    "AWS_H200": "0xaea03c0d396f0037b42610d8306208c650a1390eba181b60426a65fb244e4b96",
+    "COREWEAVE_H200": "0x67a96f399341b1228769fdb687640ca37844b30f83f09a6de6e06888876a29d1",
+    "GCP_H200": "0xe54dd81ff75d2b3f55dc0203f393dda742a93a45a42f8c7e726fd47d639dfd27",
 }
 
-# Default prices (update these with current market rates) - Part 1
+# Default prices (update these with current market rates) - Part 2
 DEFAULT_PRICES = {
-    "ORACLE_H200": 6.47,  # Oracle Cloud H200
-    "AWS_H200": 4.04,      # AWS H200
+    "COREWEAVE_H200": 14.53,  # CoreWeave H200
+    "GCP_H200": 6.60,      # Google Cloud H200
 }
 
 PRICE_DECIMALS = 18
@@ -320,20 +320,18 @@ class H200ProviderPriceUpdater:
         # Sort by price
         sorted_prices = sorted(prices.items(), key=lambda x: x[1])
 
-        print(f"\n{'Provider':<20} {'Price':<12} {'Premium vs AWS':<15}")
+        print(f"\n{'Provider':<20} {'Price':<12} {'Premium vs Cheapest':<18}")
         print("-" * 70)
 
-        aws_price = prices.get("AWS_H200", 0)
+        cheapest_price = min((p for p in prices.values() if p > 0), default=0)
 
         for asset_name, price in sorted_prices:
             provider_name = asset_name.replace("_H200", "").replace("_", " ").title()
             price_str = f"${price:.2f}/hr" if price > 0 else "Not set"
 
-            if price > 0 and aws_price > 0 and asset_name != "AWS_H200":
-                premium = ((price - aws_price) / aws_price) * 100
-                premium_str = f"+{premium:.1f}%"
-            elif asset_name == "AWS_H200":
-                premium_str = "Baseline"
+            if price > 0 and cheapest_price > 0:
+                premium = ((price - cheapest_price) / cheapest_price) * 100
+                premium_str = "Baseline" if abs(premium) < 1e-9 else f"+{premium:.1f}%"
             else:
                 premium_str = "-"
 
@@ -407,30 +405,33 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Update H200 provider-specific oracle prices (Part 1: Oracle & AWS)",
+        description="Update H200 provider-specific oracle prices (Part 2: CoreWeave & GCP)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Update all providers with default prices
-  python scripts/update_h200_provider_prices.py
+
+  # Update CoreWeave & GCP with default prices
+  python update_to_oracle_single_part2.py
 
   # Update specific providers
-  python scripts/update_h200_provider_prices.py --oracle-h200 6.50 --aws-h200 4.10
+  python update_to_oracle_single_part2.py --coreweave-h200 14.00 --gcp-h200 6.50
 
-  # Set all providers to the same price
-  python scripts/update_h200_provider_prices.py --all 5.00
+  # Set both providers to the same price
+  python update_to_oracle_single_part2.py --all 5.00
 
   # Just show current prices (no updates)
-  python scripts/update_h200_provider_prices.py --show-only
+  python update_to_oracle_single_part2.py --show-only
 
 Environment Variables:
-  SEPOLIA_RPC_URL    Ethereum RPC endpoint
-  PRIVATE_KEY        Wallet private key for signing transactions
-        """
+  SEPOLIA_RPC_URL              Ethereum RPC endpoint
+  PRIVATE_KEY / ORACLE_UPDATER_PRIVATE_KEY
+                              Wallet private key for signing transactions
+  MULTI_ASSET_ORACLE_ADDRESS   MultiAssetOracle contract address
+        """,
     )
 
-    parser.add_argument("--oracle-h200", type=float, help="Oracle Cloud H200 price (USD/hr)")
-    parser.add_argument("--aws-h200", type=float, help="AWS H200 price (USD/hr)")
+    parser.add_argument("--coreweave-h200", type=float, help="CoreWeave H200 price (USD/hr)")
+    parser.add_argument("--gcp-h200", type=float, help="Google Cloud H200 price (USD/hr)")
     parser.add_argument("--all", type=float, help="Set all providers to this price (USD/hr)")
     parser.add_argument("--show-only", action="store_true", help="Only show current prices, don't update")
 
@@ -462,16 +463,22 @@ Environment Variables:
         sys.exit(0)
 
     # Determine prices to update
-    prices = {}
+    prices: Dict[str, float] = {}
 
     if args.all is not None:
-        # Set all to same price
+        # Set both to same price
         for asset_name in ASSET_IDS.keys():
             prices[asset_name] = args.all
     else:
         # Use individual prices or defaults
-        prices["ORACLE_H200"] = args.oracle_h200 if args.oracle_h200 is not None else DEFAULT_PRICES["ORACLE_H200"]
-        prices["AWS_H200"] = args.aws_h200 if args.aws_h200 is not None else DEFAULT_PRICES["AWS_H200"]
+        prices["COREWEAVE_H200"] = (
+            args.coreweave_h200
+            if args.coreweave_h200 is not None
+            else DEFAULT_PRICES["COREWEAVE_H200"]
+        )
+        prices["GCP_H200"] = (
+            args.gcp_h200 if args.gcp_h200 is not None else DEFAULT_PRICES["GCP_H200"]
+        )
 
     # Validate prices
     for asset_name, price in prices.items():

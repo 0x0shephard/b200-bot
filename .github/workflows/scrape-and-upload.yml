@@ -110,6 +110,15 @@ jobs:
           echo "⛓️  Updating H200 provider prices to Oracle..."
           python update_to_oracle_single.py
 
+      - name: Update H200 Provider Prices to Oracle (Part 2)
+        env:
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          ORACLE_UPDATER_PRIVATE_KEY: ${{ secrets.ORACLE_UPDATER_PRIVATE_KEY }}
+          MULTI_ASSET_ORACLE_ADDRESS: ${{ secrets.MULTI_ASSET_ORACLE_ADDRESS }}
+        run: |
+          echo "⛓️  Updating H200 provider prices to Oracle (Part 2)..."
+          python update_to_oracle_single_part2.py
+
       - name: Upload artifacts (optional - for debugging)
         if: always()
         uses: actions/upload-artifact@v4
