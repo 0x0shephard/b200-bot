@@ -40,7 +40,7 @@ def load_index_data(filepath: str = "b200_weighted_index.json") -> Optional[Dict
 
 
 def push_to_supabase(index_data: Dict) -> bool:
-    """Push B200 index data to Supabase with price validation"""
+    """Push B200 index data and provider prices to Supabase with price validation"""
     
     # Get Supabase credentials from environment
     supabase_url = os.getenv('SUPABASE_URL')
@@ -93,12 +93,17 @@ def push_to_supabase(index_data: Dict) -> bool:
         print(f"   Index Price: ${insert_data['index_price']:.2f}/hr")
         print(f"   Timestamp: {insert_data['timestamp']}")
         
-        # Insert into Supabase
+        # Insert main index into Supabase
         response = supabase.table('b200_index_prices').insert(insert_data).execute()
         
         if response.data:
-            print(f"\n✅ Successfully pushed to Supabase!")
-            print(f"   Record ID: {response.data[0]['id']}")
+            index_id = response.data[0]['id']
+            print(f"\n✅ Successfully pushed index to Supabase!")
+            print(f"   Record ID: {index_id}")
+            
+            # Push individual provider prices
+            push_provider_prices(supabase, index_data, index_id)
+            
             return True
         else:
             print(f"\n❌ Error: No data returned from Supabase")
@@ -106,6 +111,61 @@ def push_to_supabase(index_data: Dict) -> bool:
             
     except Exception as e:
         print(f"\n❌ Error pushing to Supabase: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def push_provider_prices(supabase: 'Client', index_data: Dict, index_id: int) -> bool:
+    """Push individual provider prices to b200_provider_prices table"""
+    
+    try:
+        timestamp = index_data.get("timestamp")
+        all_provider_data = index_data.get("all_provider_data", {})
+        hyperscaler_details = index_data.get("hyperscaler_details", [])
+        non_hyperscaler_details = index_data.get("non_hyperscaler_details", [])
+        
+        provider_records = []
+        
+        print(f"\n📤 Pushing individual provider prices...")
+        
+        # Process hyperscalers
+        print(f"\n   📊 Hyperscalers:")
+        for detail in hyperscaler_details:
+            provider_name = detail.get("provider")
+            provider_data = all_provider_data.get(provider_name, {})
+            
+            record = {
+                "index_id": index_id,
+                "timestamp": timestamp,
+                "provider_name": provider_name,
+                "provider_type": "hyperscaler",
+                "original_price": round(provider_data.get("original_price", 0), 4),
+                "effective_price": round(detail.get("effective_price", 0), 4),
+                "discount_rate": round(provider_data.get("discount_rate", 0), 4),
+                "relative_weight": round(detail.get("relative_weight", 0), 4),
+                "absolute_weight": round(detail.get("absolute_weight", 0), 4),
+                "weighted_contribution": round(detail.get("weighted_contribution", 0), 4),
+            }
+            provider_records.append(record)
+            print(f"      • {provider_name}: ${record['effective_price']:.2f}/hr (discounted from ${record['original_price']:.2f})")
+        
+        # Insert hyperscaler records only
+        if provider_records:
+            response = supabase.table('b200_provider_prices').insert(provider_records).execute()
+            
+            if response.data:
+                print(f"\n   ✅ Pushed {len(response.data)} hyperscaler prices to Supabase!")
+                return True
+            else:
+                print(f"\n   ⚠️ Warning: No data returned for provider prices")
+                return False
+        else:
+            print(f"\n   ⚠️ No provider records to push")
+            return False
+            
+    except Exception as e:
+        print(f"\n   ⚠️ Error pushing provider prices: {e}")
         import traceback
         traceback.print_exc()
         return False
