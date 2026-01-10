@@ -101,6 +101,15 @@ jobs:
 
           python update_to_oracle.py $PRICE
 
+      - name: Update H200 Provider Prices to Oracle
+        env:
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          PRIVATE_KEY: ${{ secrets.ORACLE_UPDATER_PRIVATE_KEY }}
+          MULTI_ASSET_ORACLE_ADDRESS: ${{ secrets.MULTI_ASSET_ORACLE_ADDRESS }}
+        run: |
+          echo "⛓️  Updating H200 provider prices to Oracle..."
+          python update_to_oracle_single.py
+
       - name: Upload artifacts (optional - for debugging)
         if: always()
         uses: actions/upload-artifact@v4
@@ -111,6 +120,7 @@ jobs:
             b200_normalized_prices.json
             b200_weighted_index.json
             b200_oracle_update_log.json
+            h200_provider_price_updates.json
           retention-days: 7
 
       - name: Summary
@@ -125,5 +135,9 @@ jobs:
           fi
 
           if [ -f "b200_oracle_update_log.json" ]; then
-            echo "📝 Oracle update log created"
+            echo "📝 B200 Oracle update log created"
+          fi
+
+          if [ -f "h200_provider_price_updates.json" ]; then
+            echo "📝 H200 provider prices updated on Oracle"
           fi
