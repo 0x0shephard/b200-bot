@@ -5,7 +5,7 @@ This script updates the MultiAssetOracle with current market prices for:
 - Oracle Cloud B200
 - AWS B200
 
-Prices are read from the scraped b200_normalized_prices.json file.
+Prices are read from b200_weighted_index.json (effective_price after discounts).
 
 Usage:
     python update_to_oracle_single.py
@@ -48,51 +48,58 @@ PROVIDER_MAPPING = {
     "AWS_B200": "AWS",
 }
 
-# Fallback prices only used if scraped data is unavailable
+# Fallback prices (effective prices) only used if weighted index is unavailable
 FALLBACK_PRICES = {
-    "ORACLE_B200": 14.00,  # Oracle Cloud B200
-    "AWS_B200": 9.66,      # AWS B200
+    "ORACLE_B200": 14.00,  # Oracle Cloud B200 (not in weighted index, using estimate)
+    "AWS_B200": 3.87,      # AWS B200 effective price
 }
 
 
 def load_scraped_prices() -> Dict[str, float]:
-    """Load prices from the scraped b200_normalized_prices.json file.
+    """Load effective prices from the b200_weighted_index.json file.
+
+    Uses the effective_price (after discounts/normalization) for each provider,
+    NOT the original/raw scraped prices.
 
     Returns:
-        Dictionary mapping asset names to prices in USD/hour
+        Dictionary mapping asset names to effective prices in USD/hour
     """
     script_dir = Path(__file__).parent
-    normalized_file = script_dir / "b200_normalized_prices.json"
+    weighted_index_file = script_dir / "b200_weighted_index.json"
 
     prices = {}
 
-    if not normalized_file.exists():
-        print(f"WARNING: {normalized_file} not found, using fallback prices")
+    if not weighted_index_file.exists():
+        print(f"WARNING: {weighted_index_file} not found, using fallback prices")
         return FALLBACK_PRICES.copy()
 
     try:
-        with open(normalized_file, "r", encoding="utf-8") as f:
+        with open(weighted_index_file, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        providers = data.get("providers", {})
+        all_provider_data = data.get("all_provider_data", {})
 
         for asset_name, provider_name in PROVIDER_MAPPING.items():
-            if provider_name in providers:
-                price = providers[provider_name].get("normalized_price")
-                if price is not None and price > 0:
-                    prices[asset_name] = float(price)
-                    print(f"  Loaded {asset_name}: ${price:.2f}/hr from scraped data")
+            if provider_name in all_provider_data:
+                provider_info = all_provider_data[provider_name]
+                # Use effective_price (normalized/discounted) instead of original_price
+                effective_price = provider_info.get("effective_price")
+                original_price = provider_info.get("original_price")
+
+                if effective_price is not None and effective_price > 0:
+                    prices[asset_name] = float(effective_price)
+                    print(f"  Loaded {asset_name}: ${effective_price:.2f}/hr (effective price, original: ${original_price:.2f}/hr)")
                 else:
                     prices[asset_name] = FALLBACK_PRICES[asset_name]
-                    print(f"  WARNING: Invalid price for {provider_name}, using fallback ${FALLBACK_PRICES[asset_name]:.2f}/hr")
+                    print(f"  WARNING: Invalid effective_price for {provider_name}, using fallback ${FALLBACK_PRICES[asset_name]:.2f}/hr")
             else:
                 prices[asset_name] = FALLBACK_PRICES[asset_name]
-                print(f"  WARNING: {provider_name} not found in scraped data, using fallback ${FALLBACK_PRICES[asset_name]:.2f}/hr")
+                print(f"  WARNING: {provider_name} not found in weighted index, using fallback ${FALLBACK_PRICES[asset_name]:.2f}/hr")
 
         return prices
 
     except Exception as e:
-        print(f"ERROR: Failed to load scraped prices: {e}")
+        print(f"ERROR: Failed to load weighted index prices: {e}")
         return FALLBACK_PRICES.copy()
 
 PRICE_DECIMALS = 18
@@ -512,8 +519,8 @@ Environment Variables:
         updater.show_price_comparison()
         sys.exit(0)
 
-    # Load scraped prices first
-    print("\n📊 Loading scraped prices from b200_normalized_prices.json...")
+    # Load effective prices from weighted index
+    print("\n📊 Loading effective prices from b200_weighted_index.json...")
     scraped_prices = load_scraped_prices()
 
     # Determine prices to update
