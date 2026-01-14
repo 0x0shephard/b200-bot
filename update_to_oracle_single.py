@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Update oracle prices for H200 provider-specific markets (Part 1).
+"""Update oracle prices for B200 provider-specific markets (Part 1).
 
 This script updates the MultiAssetOracle with current market prices for:
-- Oracle Cloud H200: $6.47/hour
-- AWS H200: $4.04/hour
+- Oracle Cloud B200
+- AWS B200
+
+Prices are read from the scraped b200_normalized_prices.json file.
 
 Usage:
-    python scripts/update_h200_provider_prices.py
-    python scripts/update_h200_provider_prices.py --oracle-h200 6.50 --aws-h200 4.10
-    python scripts/update_h200_provider_prices.py --all 5.00  # Set all to same price
+    python update_to_oracle_single.py
+    python update_to_oracle_single.py --oracle-b200 6.50 --aws-b200 4.10
+    python update_to_oracle_single.py --all 5.00  # Set all to same price
+    python update_to_oracle_single.py --show-only  # Just show current prices
 """
 
 import json
@@ -17,6 +20,7 @@ import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 from dotenv import load_dotenv
@@ -34,15 +38,62 @@ MULTI_ASSET_ORACLE_ADDRESS = os.getenv(
 
 # Asset IDs (keccak256 of asset names) - Part 1
 ASSET_IDS = {
-    "ORACLE_H200": "0xf162ee5639707284e5b6a23eeb0b5d6627a935f1ff571463d1eb29e4e2800e6c",
-    "AWS_H200": "0xaea03c0d396f0037b42610d8306208c650a1390eba181b60426a65fb244e4b96",
+    "ORACLE_B200": "0xf162ee5639707284e5b6a23eeb0b5d6627a935f1ff571463d1eb29e4e2800e6c",
+    "AWS_B200": "0xaea03c0d396f0037b42610d8306208c650a1390eba181b60426a65fb244e4b96",
 }
 
-# Default prices (update these with current market rates) - Part 1
-DEFAULT_PRICES = {
-    "ORACLE_H200": 6.47,  # Oracle Cloud H200
-    "AWS_H200": 4.04,      # AWS H200
+# Mapping from asset names to provider names in b200_normalized_prices.json
+PROVIDER_MAPPING = {
+    "ORACLE_B200": "Oracle",
+    "AWS_B200": "AWS",
 }
+
+# Fallback prices only used if scraped data is unavailable
+FALLBACK_PRICES = {
+    "ORACLE_B200": 14.00,  # Oracle Cloud B200
+    "AWS_B200": 9.66,      # AWS B200
+}
+
+
+def load_scraped_prices() -> Dict[str, float]:
+    """Load prices from the scraped b200_normalized_prices.json file.
+
+    Returns:
+        Dictionary mapping asset names to prices in USD/hour
+    """
+    script_dir = Path(__file__).parent
+    normalized_file = script_dir / "b200_normalized_prices.json"
+
+    prices = {}
+
+    if not normalized_file.exists():
+        print(f"WARNING: {normalized_file} not found, using fallback prices")
+        return FALLBACK_PRICES.copy()
+
+    try:
+        with open(normalized_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        providers = data.get("providers", {})
+
+        for asset_name, provider_name in PROVIDER_MAPPING.items():
+            if provider_name in providers:
+                price = providers[provider_name].get("normalized_price")
+                if price is not None and price > 0:
+                    prices[asset_name] = float(price)
+                    print(f"  Loaded {asset_name}: ${price:.2f}/hr from scraped data")
+                else:
+                    prices[asset_name] = FALLBACK_PRICES[asset_name]
+                    print(f"  WARNING: Invalid price for {provider_name}, using fallback ${FALLBACK_PRICES[asset_name]:.2f}/hr")
+            else:
+                prices[asset_name] = FALLBACK_PRICES[asset_name]
+                print(f"  WARNING: {provider_name} not found in scraped data, using fallback ${FALLBACK_PRICES[asset_name]:.2f}/hr")
+
+        return prices
+
+    except Exception as e:
+        print(f"ERROR: Failed to load scraped prices: {e}")
+        return FALLBACK_PRICES.copy()
 
 PRICE_DECIMALS = 18
 
@@ -107,8 +158,8 @@ class AssetPrice:
         return int(self.price_usd * (10 ** PRICE_DECIMALS))
 
 
-class H200ProviderPriceUpdater:
-    """Update H200 provider-specific prices on MultiAssetOracle contract."""
+class B200ProviderPriceUpdater:
+    """Update B200 provider-specific prices on MultiAssetOracle contract."""
 
     def __init__(self, rpc_url: str, private_key: str, contract_address: str):
         self.w3 = Web3(Web3.HTTPProvider(rpc_url))
@@ -124,7 +175,7 @@ class H200ProviderPriceUpdater:
 
         balance_eth = self.w3.from_wei(self.w3.eth.get_balance(self.address), "ether")
         print("=" * 70)
-        print("H200 PROVIDER PRICE UPDATER")
+        print("B200 PROVIDER PRICE UPDATER")
         print("=" * 70)
         print(f"Connected to Sepolia testnet")
         print(f"  Chain ID: {self.w3.eth.chain_id}")
@@ -253,7 +304,7 @@ class H200ProviderPriceUpdater:
             Dictionary mapping asset names to transaction hashes
         """
         print("\n" + "=" * 70)
-        print("UPDATING ALL H200 PROVIDER PRICES")
+        print("UPDATING ALL B200 PROVIDER PRICES")
         print("=" * 70)
 
         results = {}
@@ -309,7 +360,7 @@ class H200ProviderPriceUpdater:
     def show_price_comparison(self):
         """Display price comparison across all H200 providers."""
         print("\n" + "=" * 70)
-        print("H200 PROVIDER PRICE COMPARISON")
+        print("B200 PROVIDER PRICE COMPARISON")
         print("=" * 70)
 
         prices = {}
@@ -323,16 +374,16 @@ class H200ProviderPriceUpdater:
         print(f"\n{'Provider':<20} {'Price':<12} {'Premium vs AWS':<15}")
         print("-" * 70)
 
-        aws_price = prices.get("AWS_H200", 0)
+        aws_price = prices.get("AWS_B200", 0)
 
         for asset_name, price in sorted_prices:
-            provider_name = asset_name.replace("_H200", "").replace("_", " ").title()
+            provider_name = asset_name.replace("_B200", "").replace("_", " ").title()
             price_str = f"${price:.2f}/hr" if price > 0 else "Not set"
 
-            if price > 0 and aws_price > 0 and asset_name != "AWS_H200":
+            if price > 0 and aws_price > 0 and asset_name != "AWS_B200":
                 premium = ((price - aws_price) / aws_price) * 100
                 premium_str = f"+{premium:.1f}%"
-            elif asset_name == "AWS_H200":
+            elif asset_name == "AWS_B200":
                 premium_str = "Baseline"
             else:
                 premium_str = "-"
@@ -350,10 +401,10 @@ class H200ProviderPriceUpdater:
             spread_pct = (spread / cheapest[1]) * 100
 
             print("\nARBITRAGE OPPORTUNITY:")
-            print(f"  Cheapest:      {cheapest[0].replace('_H200', '').replace('_', ' ').title()} (${cheapest[1]:.2f}/hr)")
-            print(f"  Most Expensive: {most_expensive[0].replace('_H200', '').replace('_', ' ').title()} (${most_expensive[1]:.2f}/hr)")
+            print(f"  Cheapest:      {cheapest[0].replace('_B200', '').replace('_', ' ').title()} (${cheapest[1]:.2f}/hr)")
+            print(f"  Most Expensive: {most_expensive[0].replace('_B200', '').replace('_', ' ').title()} (${most_expensive[1]:.2f}/hr)")
             print(f"  Spread:        ${spread:.2f}/hr ({spread_pct:.1f}%)")
-            print(f"\n  Strategy: Short {most_expensive[0].replace('_H200', '').replace('_', ' ').title()}, Long {cheapest[0].replace('_H200', '').replace('_', ' ').title()}")
+            print(f"\n  Strategy: Short {most_expensive[0].replace('_B200', '').replace('_', ' ').title()}, Long {cheapest[0].replace('_B200', '').replace('_', ' ').title()}")
             print("=" * 70)
 
     def log_update(self, results: Dict[str, str], prices: Dict[str, float]):
@@ -376,7 +427,7 @@ class H200ProviderPriceUpdater:
                     "tx_hash": tx_hash,
                 })
 
-        log_file = "h200_provider_price_updates.json"
+        log_file = "b200_provider_price_updates.json"
         logs = []
 
         # Load existing logs
@@ -407,21 +458,21 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Update H200 provider-specific oracle prices (Part 1: Oracle & AWS)",
+        description="Update B200 provider-specific oracle prices (Part 1: Oracle & AWS)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Update all providers with default prices
-  python scripts/update_h200_provider_prices.py
+  # Update all providers with scraped prices from b200_normalized_prices.json
+  python update_to_oracle_single.py
 
-  # Update specific providers
-  python scripts/update_h200_provider_prices.py --oracle-h200 6.50 --aws-h200 4.10
+  # Update specific providers with custom prices
+  python update_to_oracle_single.py --oracle-b200 14.00 --aws-b200 9.66
 
   # Set all providers to the same price
-  python scripts/update_h200_provider_prices.py --all 5.00
+  python update_to_oracle_single.py --all 5.00
 
   # Just show current prices (no updates)
-  python scripts/update_h200_provider_prices.py --show-only
+  python update_to_oracle_single.py --show-only
 
 Environment Variables:
   SEPOLIA_RPC_URL    Ethereum RPC endpoint
@@ -429,8 +480,8 @@ Environment Variables:
         """
     )
 
-    parser.add_argument("--oracle-h200", type=float, help="Oracle Cloud H200 price (USD/hr)")
-    parser.add_argument("--aws-h200", type=float, help="AWS H200 price (USD/hr)")
+    parser.add_argument("--oracle-b200", type=float, help="Oracle Cloud B200 price (USD/hr) - overrides scraped price")
+    parser.add_argument("--aws-b200", type=float, help="AWS B200 price (USD/hr) - overrides scraped price")
     parser.add_argument("--all", type=float, help="Set all providers to this price (USD/hr)")
     parser.add_argument("--show-only", action="store_true", help="Only show current prices, don't update")
 
@@ -447,7 +498,7 @@ Environment Variables:
 
     # Initialize updater
     try:
-        updater = H200ProviderPriceUpdater(
+        updater = B200ProviderPriceUpdater(
             rpc_url=SEPOLIA_RPC_URL,
             private_key=PRIVATE_KEY,
             contract_address=MULTI_ASSET_ORACLE_ADDRESS,
@@ -461,6 +512,10 @@ Environment Variables:
         updater.show_price_comparison()
         sys.exit(0)
 
+    # Load scraped prices first
+    print("\n📊 Loading scraped prices from b200_normalized_prices.json...")
+    scraped_prices = load_scraped_prices()
+
     # Determine prices to update
     prices = {}
 
@@ -469,9 +524,9 @@ Environment Variables:
         for asset_name in ASSET_IDS.keys():
             prices[asset_name] = args.all
     else:
-        # Use individual prices or defaults
-        prices["ORACLE_H200"] = args.oracle_h200 if args.oracle_h200 is not None else DEFAULT_PRICES["ORACLE_H200"]
-        prices["AWS_H200"] = args.aws_h200 if args.aws_h200 is not None else DEFAULT_PRICES["AWS_H200"]
+        # Use CLI overrides or scraped prices
+        prices["ORACLE_B200"] = args.oracle_b200 if args.oracle_b200 is not None else scraped_prices["ORACLE_B200"]
+        prices["AWS_B200"] = args.aws_b200 if args.aws_b200 is not None else scraped_prices["AWS_B200"]
 
     # Validate prices
     for asset_name, price in prices.items():
@@ -480,7 +535,7 @@ Environment Variables:
             sys.exit(1)
         if price > 100:
             print(f"\nWARNING: {asset_name} price ${price:.2f}/hr seems unusually high")
-            print("Expected range: $1-20/hour for H200 GPUs")
+            print("Expected range: $1-50/hour for B200 GPUs")
 
     # Update prices
     try:

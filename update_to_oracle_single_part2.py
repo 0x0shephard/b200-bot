@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Update oracle prices for H200 provider-specific markets (Part 2).
+"""Update oracle prices for B200 provider-specific markets (Part 2).
 
 This script updates the MultiAssetOracle with current market prices for:
-- CoreWeave H200: $14.53/hour
-- Google Cloud H200: $6.60/hour
+- CoreWeave B200
+- Google Cloud B200
+
+Prices are read from the scraped b200_normalized_prices.json file.
 
 Usage:
-    python scripts/update_h200_provider_prices_part2.py
-    python scripts/update_h200_provider_prices_part2.py --coreweave-h200 14.00 --gcp-h200 6.50
-    python scripts/update_h200_provider_prices.py --all 5.00  # Set all to same price
+    python update_to_oracle_single_part2.py
+    python update_to_oracle_single_part2.py --coreweave-b200 42.00 --gcp-b200 18.50
+    python update_to_oracle_single_part2.py --all 5.00  # Set all to same price
+    python update_to_oracle_single_part2.py --show-only  # Just show current prices
 """
 
 import json
@@ -17,6 +20,7 @@ import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 from dotenv import load_dotenv
@@ -34,15 +38,62 @@ MULTI_ASSET_ORACLE_ADDRESS = os.getenv(
 
 # Asset IDs (keccak256 of asset names) - Part 2
 ASSET_IDS = {
-    "COREWEAVE_H200": "0x67a96f399341b1228769fdb687640ca37844b30f83f09a6de6e06888876a29d1",
-    "GCP_H200": "0xe54dd81ff75d2b3f55dc0203f393dda742a93a45a42f8c7e726fd47d639dfd27",
+    "COREWEAVE_B200": "0x67a96f399341b1228769fdb687640ca37844b30f83f09a6de6e06888876a29d1",
+    "GCP_B200": "0xe54dd81ff75d2b3f55dc0203f393dda742a93a45a42f8c7e726fd47d639dfd27",
 }
 
-# Default prices (update these with current market rates) - Part 2
-DEFAULT_PRICES = {
-    "COREWEAVE_H200": 14.53,  # CoreWeave H200
-    "GCP_H200": 6.60,      # Google Cloud H200
+# Mapping from asset names to provider names in b200_normalized_prices.json
+PROVIDER_MAPPING = {
+    "COREWEAVE_B200": "CoreWeave",
+    "GCP_B200": "Google Cloud",
 }
+
+# Fallback prices only used if scraped data is unavailable
+FALLBACK_PRICES = {
+    "COREWEAVE_B200": 42.00,  # CoreWeave B200
+    "GCP_B200": 18.50,        # Google Cloud B200
+}
+
+
+def load_scraped_prices() -> Dict[str, float]:
+    """Load prices from the scraped b200_normalized_prices.json file.
+
+    Returns:
+        Dictionary mapping asset names to prices in USD/hour
+    """
+    script_dir = Path(__file__).parent
+    normalized_file = script_dir / "b200_normalized_prices.json"
+
+    prices = {}
+
+    if not normalized_file.exists():
+        print(f"WARNING: {normalized_file} not found, using fallback prices")
+        return FALLBACK_PRICES.copy()
+
+    try:
+        with open(normalized_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        providers = data.get("providers", {})
+
+        for asset_name, provider_name in PROVIDER_MAPPING.items():
+            if provider_name in providers:
+                price = providers[provider_name].get("normalized_price")
+                if price is not None and price > 0:
+                    prices[asset_name] = float(price)
+                    print(f"  Loaded {asset_name}: ${price:.2f}/hr from scraped data")
+                else:
+                    prices[asset_name] = FALLBACK_PRICES[asset_name]
+                    print(f"  WARNING: Invalid price for {provider_name}, using fallback ${FALLBACK_PRICES[asset_name]:.2f}/hr")
+            else:
+                prices[asset_name] = FALLBACK_PRICES[asset_name]
+                print(f"  WARNING: {provider_name} not found in scraped data, using fallback ${FALLBACK_PRICES[asset_name]:.2f}/hr")
+
+        return prices
+
+    except Exception as e:
+        print(f"ERROR: Failed to load scraped prices: {e}")
+        return FALLBACK_PRICES.copy()
 
 PRICE_DECIMALS = 18
 
@@ -107,8 +158,8 @@ class AssetPrice:
         return int(self.price_usd * (10 ** PRICE_DECIMALS))
 
 
-class H200ProviderPriceUpdater:
-    """Update H200 provider-specific prices on MultiAssetOracle contract."""
+class B200ProviderPriceUpdater:
+    """Update B200 provider-specific prices on MultiAssetOracle contract."""
 
     def __init__(self, rpc_url: str, private_key: str, contract_address: str):
         self.w3 = Web3(Web3.HTTPProvider(rpc_url))
@@ -124,7 +175,7 @@ class H200ProviderPriceUpdater:
 
         balance_eth = self.w3.from_wei(self.w3.eth.get_balance(self.address), "ether")
         print("=" * 70)
-        print("H200 PROVIDER PRICE UPDATER")
+        print("B200 PROVIDER PRICE UPDATER")
         print("=" * 70)
         print(f"Connected to Sepolia testnet")
         print(f"  Chain ID: {self.w3.eth.chain_id}")
@@ -253,7 +304,7 @@ class H200ProviderPriceUpdater:
             Dictionary mapping asset names to transaction hashes
         """
         print("\n" + "=" * 70)
-        print("UPDATING ALL H200 PROVIDER PRICES")
+        print("UPDATING ALL B200 PROVIDER PRICES")
         print("=" * 70)
 
         results = {}
@@ -309,7 +360,7 @@ class H200ProviderPriceUpdater:
     def show_price_comparison(self):
         """Display price comparison across all H200 providers."""
         print("\n" + "=" * 70)
-        print("H200 PROVIDER PRICE COMPARISON")
+        print("B200 PROVIDER PRICE COMPARISON")
         print("=" * 70)
 
         prices = {}
@@ -326,7 +377,7 @@ class H200ProviderPriceUpdater:
         cheapest_price = min((p for p in prices.values() if p > 0), default=0)
 
         for asset_name, price in sorted_prices:
-            provider_name = asset_name.replace("_H200", "").replace("_", " ").title()
+            provider_name = asset_name.replace("_B200", "").replace("_", " ").title()
             price_str = f"${price:.2f}/hr" if price > 0 else "Not set"
 
             if price > 0 and cheapest_price > 0:
@@ -348,10 +399,10 @@ class H200ProviderPriceUpdater:
             spread_pct = (spread / cheapest[1]) * 100
 
             print("\nARBITRAGE OPPORTUNITY:")
-            print(f"  Cheapest:      {cheapest[0].replace('_H200', '').replace('_', ' ').title()} (${cheapest[1]:.2f}/hr)")
-            print(f"  Most Expensive: {most_expensive[0].replace('_H200', '').replace('_', ' ').title()} (${most_expensive[1]:.2f}/hr)")
+            print(f"  Cheapest:      {cheapest[0].replace('_B200', '').replace('_', ' ').title()} (${cheapest[1]:.2f}/hr)")
+            print(f"  Most Expensive: {most_expensive[0].replace('_B200', '').replace('_', ' ').title()} (${most_expensive[1]:.2f}/hr)")
             print(f"  Spread:        ${spread:.2f}/hr ({spread_pct:.1f}%)")
-            print(f"\n  Strategy: Short {most_expensive[0].replace('_H200', '').replace('_', ' ').title()}, Long {cheapest[0].replace('_H200', '').replace('_', ' ').title()}")
+            print(f"\n  Strategy: Short {most_expensive[0].replace('_B200', '').replace('_', ' ').title()}, Long {cheapest[0].replace('_B200', '').replace('_', ' ').title()}")
             print("=" * 70)
 
     def log_update(self, results: Dict[str, str], prices: Dict[str, float]):
@@ -374,7 +425,7 @@ class H200ProviderPriceUpdater:
                     "tx_hash": tx_hash,
                 })
 
-        log_file = "h200_provider_price_updates.json"
+        log_file = "b200_provider_price_updates.json"
         logs = []
 
         # Load existing logs
@@ -405,16 +456,16 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Update H200 provider-specific oracle prices (Part 2: CoreWeave & GCP)",
+        description="Update B200 provider-specific oracle prices (Part 2: CoreWeave & GCP)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
 
-  # Update CoreWeave & GCP with default prices
+  # Update CoreWeave & GCP with scraped prices from b200_normalized_prices.json
   python update_to_oracle_single_part2.py
 
-  # Update specific providers
-  python update_to_oracle_single_part2.py --coreweave-h200 14.00 --gcp-h200 6.50
+  # Update specific providers with custom prices
+  python update_to_oracle_single_part2.py --coreweave-b200 42.00 --gcp-b200 18.50
 
   # Set both providers to the same price
   python update_to_oracle_single_part2.py --all 5.00
@@ -430,8 +481,8 @@ Environment Variables:
         """,
     )
 
-    parser.add_argument("--coreweave-h200", type=float, help="CoreWeave H200 price (USD/hr)")
-    parser.add_argument("--gcp-h200", type=float, help="Google Cloud H200 price (USD/hr)")
+    parser.add_argument("--coreweave-b200", type=float, help="CoreWeave B200 price (USD/hr) - overrides scraped price")
+    parser.add_argument("--gcp-b200", type=float, help="Google Cloud B200 price (USD/hr) - overrides scraped price")
     parser.add_argument("--all", type=float, help="Set all providers to this price (USD/hr)")
     parser.add_argument("--show-only", action="store_true", help="Only show current prices, don't update")
 
@@ -448,7 +499,7 @@ Environment Variables:
 
     # Initialize updater
     try:
-        updater = H200ProviderPriceUpdater(
+        updater = B200ProviderPriceUpdater(
             rpc_url=SEPOLIA_RPC_URL,
             private_key=PRIVATE_KEY,
             contract_address=MULTI_ASSET_ORACLE_ADDRESS,
@@ -462,6 +513,10 @@ Environment Variables:
         updater.show_price_comparison()
         sys.exit(0)
 
+    # Load scraped prices first
+    print("\n📊 Loading scraped prices from b200_normalized_prices.json...")
+    scraped_prices = load_scraped_prices()
+
     # Determine prices to update
     prices: Dict[str, float] = {}
 
@@ -470,14 +525,14 @@ Environment Variables:
         for asset_name in ASSET_IDS.keys():
             prices[asset_name] = args.all
     else:
-        # Use individual prices or defaults
-        prices["COREWEAVE_H200"] = (
-            args.coreweave_h200
-            if args.coreweave_h200 is not None
-            else DEFAULT_PRICES["COREWEAVE_H200"]
+        # Use CLI overrides or scraped prices
+        prices["COREWEAVE_B200"] = (
+            args.coreweave_b200
+            if args.coreweave_b200 is not None
+            else scraped_prices["COREWEAVE_B200"]
         )
-        prices["GCP_H200"] = (
-            args.gcp_h200 if args.gcp_h200 is not None else DEFAULT_PRICES["GCP_H200"]
+        prices["GCP_B200"] = (
+            args.gcp_b200 if args.gcp_b200 is not None else scraped_prices["GCP_B200"]
         )
 
     # Validate prices
@@ -487,7 +542,7 @@ Environment Variables:
             sys.exit(1)
         if price > 100:
             print(f"\nWARNING: {asset_name} price ${price:.2f}/hr seems unusually high")
-            print("Expected range: $1-20/hour for H200 GPUs")
+            print("Expected range: $1-50/hour for B200 GPUs")
 
     # Update prices
     try:
