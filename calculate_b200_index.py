@@ -3,7 +3,8 @@
 B200 GPU Weighted Index Calculator
 
 Calculates a weighted B200 GPU index price based on:
-1. Hyperscalers (AWS, Google Cloud, CoreWeave) with 70-85% discounts
+1. Hyperscalers (AWS, Oracle, Google Cloud, CoreWeave) with static discounts
+   - AWS: 33% (Savings Plans), Oracle: 25% (volume), Google: 25% (CUDs), CoreWeave: 50% (take-or-pay)
    - These providers sell 80% at discounted rates, 20% at full price
    - Weights based on quarterly B200 revenue from research
 2. Non-hyperscalers at full price (weighted by revenue)
@@ -11,13 +12,13 @@ Calculates a weighted B200 GPU index price based on:
 
 Revenue Source: B200 Revenue Research (Q3 2025)
 - AWS: $1,300M quarterly B200 revenue
+- Oracle: $730M quarterly B200 revenue
 - CoreWeave: $300M quarterly B200 revenue
 - Google Cloud: Estimated $500M (major hyperscaler, no public B200-specific data)
 - Nebius: $73M, Crusoe: $45M, HPC-AI: $5.1M, Vultr: $4.5M, etc.
 """
 
 import json
-import random
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -32,9 +33,18 @@ class B200IndexCalculator:
         # Based on B200 Revenue Research: AWS, Oracle, Google Cloud, CoreWeave
         self.hyperscalers = ["AWS", "Oracle", "Google Cloud", "CoreWeave"]
         
-        # Hyperscaler discount range (70-85%)
-        self.discount_min = 0.70
-        self.discount_max = 0.85
+        # Static hyperscaler discounts based on B200 Revenue Research
+        # These represent typical enterprise discount rates from the research:
+        # - AWS: 21-45% off via Savings Plans → using 33% (middle estimate)
+        # - Oracle: 20-30% off via commitments/volume → using 25%
+        # - Google Cloud: ~25% off via CUDs (similar to Oracle)
+        # - CoreWeave: 40-60% off via multi-year take-or-pay → using 50%
+        self.hyperscaler_discounts = {
+            "AWS": 0.33,           # 33% discount (Savings Plans: 21-45% off)
+            "Oracle": 0.25,        # 25% discount (volume/commitment deals)
+            "Google Cloud": 0.25,  # 25% discount (Committed Use Discounts)
+            "CoreWeave": 0.50,     # 50% discount (multi-year take-or-pay: 40-60% off)
+        }
         
         # Total weight distribution
         self.hyperscaler_total_weight = 0.65  # 65%
@@ -120,18 +130,20 @@ class B200IndexCalculator:
         return 0.0
     
     def apply_hyperscaler_discounts(self, prices: Dict[str, float]) -> Dict[str, Dict]:
-        """Apply random discounts to hyperscalers"""
+        """Apply static discounts to hyperscalers based on revenue research"""
         discounted_prices = {}
         
         print("\n" + "=" * 80)
         print("💰 HYPERSCALER DISCOUNT APPLICATION")
         print("=" * 80)
+        print("Static discounts based on B200 Revenue Research:")
+        print("  AWS: 33% (Savings Plans), Oracle: 25% (volume), Google: 25% (CUDs), CoreWeave: 50% (take-or-pay)")
         print("Hyperscalers sell 80% at discounted rates, 20% at full price\n")
         
         for provider, original_price in prices.items():
             if provider in self.hyperscalers:
-                # Generate random discount between 70-85%
-                discount_rate = random.uniform(self.discount_min, self.discount_max)
+                # Get static discount for this provider
+                discount_rate = self.hyperscaler_discounts.get(provider, 0.30)  # Default 30% if not found
                 
                 # Calculate effective price: 80% at discounted rate + 20% at full rate
                 discounted_portion = original_price * (1 - discount_rate) * 0.80
@@ -148,7 +160,7 @@ class B200IndexCalculator:
                 
                 print(f"🏢 {provider:20s}")
                 print(f"   Original Price:     ${original_price:.2f}/hr")
-                print(f"   Discount Applied:   {discount_rate*100:.1f}%")
+                print(f"   Discount Applied:   {discount_rate*100:.0f}%")
                 print(f"   Discounted Price:   ${original_price * (1 - discount_rate):.2f}/hr")
                 print(f"   Effective Price:    ${effective_price:.2f}/hr (80% discounted + 20% full)")
                 print()
