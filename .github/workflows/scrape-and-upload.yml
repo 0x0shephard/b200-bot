@@ -4,9 +4,9 @@ on:
   # Run manually via workflow dispatch
   workflow_dispatch:
 
-  # Run on a schedule (every 12 hours)
+  # Run on a schedule (every 4 hours)
   schedule:
-    - cron: '0 */12 * * *'  # At minute 0 past every 12th hour
+    - cron: '0 */4 * * *'  # At minute 0 past every 4th hour
 
   # Run on push to main branches (optional - remove if not needed)
   push:
