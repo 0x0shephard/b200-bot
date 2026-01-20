@@ -33,17 +33,17 @@ class B200IndexCalculator:
         # Based on B200 Revenue Research: AWS, Oracle, Google Cloud, CoreWeave
         self.hyperscalers = ["AWS", "Oracle", "Google Cloud", "CoreWeave"]
         
-        # Static hyperscaler discounts based on B200 Revenue Research
-        # These represent typical enterprise discount rates from the research:
-        # - AWS: 21-45% off via Savings Plans → using 33% (middle estimate)
-        # - Oracle: 20-30% off via commitments/volume → using 25%
-        # - Google Cloud: ~25% off via CUDs (similar to Oracle)
-        # - CoreWeave: 40-60% off via multi-year take-or-pay → using 50%
+        # Static hyperscaler discounts aligned with H100 index methodology
+        # From gpu_index_calculator.py - keeping consistency across GPU indexes:
+        # - AWS: 44% discount (100% of enterprise buyers get discount via Savings Plans)
+        # - Oracle: 25% discount (volume/commitment deals - no H100 equivalent, using B200 research)
+        # - Google Cloud: 65% discount (65% of buyers get discount via CUDs)
+        # - CoreWeave: 50% discount (80% of buyers get discount via take-or-pay)
         self.hyperscaler_discounts = {
-            "AWS": 0.33,           # 33% discount (Savings Plans: 21-45% off)
+            "AWS": 0.44,           # 44% discount (matching H100 Savings Plans)
             "Oracle": 0.25,        # 25% discount (volume/commitment deals)
-            "Google Cloud": 0.25,  # 25% discount (Committed Use Discounts)
-            "CoreWeave": 0.50,     # 50% discount (multi-year take-or-pay: 40-60% off)
+            "Google Cloud": 0.65,  # 65% discount (matching H100 CUDs)
+            "CoreWeave": 0.50,     # 50% discount (matching H100 take-or-pay)
         }
         
         # Total weight distribution
