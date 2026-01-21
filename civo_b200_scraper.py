@@ -59,8 +59,8 @@ class CivoB200Scraper:
                 continue
         
         if not b200_prices:
-            print("\n⚠️  All live methods failed - using known pricing data")
-            b200_prices = self._get_known_pricing()
+            print("\n❌ All live methods failed - no fallback data (live data only mode)")
+            return {}
         
         # Normalize to per-GPU pricing
         normalized_prices = self._normalize_to_per_gpu(b200_prices)

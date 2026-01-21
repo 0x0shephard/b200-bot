@@ -58,8 +58,8 @@ class GreenAIB200Scraper:
                 continue
         
         if not b200_prices:
-            print("\n⚠️  All methods failed - using known pricing data")
-            b200_prices = self._get_known_pricing()
+            print("\n❌ All live methods failed - no fallback data (live data only mode)")
+            return {}
         
         print(f"\n✅ Final extraction: {len(b200_prices)} B200 price variants")
         return b200_prices

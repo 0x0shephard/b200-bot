@@ -64,14 +64,14 @@ class GCPB200Scraper:
                 continue
         
         if not b200_prices:
-            print("\n⚠️  All methods failed - using known pricing data")
-            b200_prices = self._get_known_pricing()
+            print("\n❌ All live methods failed - no fallback data (live data only mode)")
+            return {}
         
         print(f"\n✅ Final extraction: {len(b200_prices)} B200 price variants")
         return b200_prices
     
     def _validate_prices(self, prices: Dict[str, str]) -> bool:
-        """Validate that prices are in a reasonable range for B200 GPUs"""
+        """Validate that prices are in a reasonable range for B200 GPUs (per-GPU)"""
         if not prices:
             return False
         
@@ -82,8 +82,8 @@ class GCPB200Scraper:
                 price_match = re.search(r'([0-9.]+)', price_str)
                 if price_match:
                     price = float(price_match.group(1))
-                    # B200 pricing should be reasonable
-                    if 2 < price < 25:
+                    # Per-GPU B200 pricing should be $5-25/hr after normalization
+                    if 5 < price < 30:
                         return True
             except:
                 continue
@@ -160,7 +160,7 @@ class GCPB200Scraper:
         return b200_prices
     
     def _extract_from_tables(self, soup: BeautifulSoup) -> Dict[str, str]:
-        """Extract B200 prices from HTML tables"""
+        """Extract B200 prices from HTML tables - handles 8-GPU instance pricing"""
         prices = {}
         
         tables = soup.find_all('table')
@@ -170,7 +170,8 @@ class GCPB200Scraper:
             table_text = table.get_text()
             
             # Look for A4 VM or B200 mentions
-            if not ('B200' in table_text or 'A4' in table_text or 'Blackwell' in table_text):
+            if not ('B200' in table_text or 'A4' in table_text or 'Blackwell' in table_text or 
+                    'a4-' in table_text.lower() or 'nvidia-b200' in table_text.lower()):
                 continue
             
             print(f"      📋 Processing table with B200/A4 data")
@@ -180,61 +181,76 @@ class GCPB200Scraper:
                 cells = row.find_all(['td', 'th'])
                 row_text = ' '.join([cell.get_text().strip() for cell in cells])
                 
-                if ('B200' in row_text or 'A4' in row_text) and '$' in row_text:
+                # Check for B200/A4/accelerator rows
+                if ('B200' in row_text or 'A4' in row_text or 'a4-' in row_text.lower() or
+                    'nvidia-b200' in row_text.lower() or 'accelerator' in row_text.lower()) and '$' in row_text:
                     print(f"         Row: {row_text[:150]}")
                     
-                    # Extract price - GCP format varies
+                    # Extract all prices from the row
                     price_matches = re.findall(r'\$([0-9.]+)', row_text)
                     
                     for price_str in price_matches:
                         try:
-                            price = float(price_str)
-                            # Per-GPU pricing
-                            if 2.0 < price < 25.0:
-                                region = "Multiple Regions"
-                                if "us-" in row_text.lower():
-                                    region = "US Regions"
-                                elif "europe-" in row_text.lower():
-                                    region = "Europe Regions"
-                                elif "asia-" in row_text.lower():
-                                    region = "Asia Regions"
-                                
-                                variant_name = f"A4 B200 ({region})"
+                            instance_price = float(price_str)
+                            
+                            # GCP A4 VMs have 8 x B200 GPUs
+                            # Instance prices ~$80-200/hr → divide by 8 for per-GPU
+                            if 50 < instance_price < 250:
+                                per_gpu_price = instance_price / 8
+                                variant_name = "A4 B200 (Google Cloud)"
                                 if variant_name not in prices:
-                                    prices[variant_name] = f"${price:.2f}/hr"
-                                    print(f"        Table ✓ {variant_name} = ${price:.2f}/hr")
+                                    prices[variant_name] = f"${per_gpu_price:.2f}/hr"
+                                    print(f"        Table ✓ {variant_name} = ${per_gpu_price:.2f}/hr (from ${instance_price:.2f}/instance ÷ 8 GPUs)")
+                            # Also accept already per-GPU prices
+                            elif 5 < instance_price < 30:
+                                variant_name = "A4 B200 (Google Cloud)"
+                                if variant_name not in prices:
+                                    prices[variant_name] = f"${instance_price:.2f}/hr"
+                                    print(f"        Table ✓ {variant_name} = ${instance_price:.2f}/hr")
                         except ValueError:
                             continue
         
         return prices
     
     def _extract_from_text(self, text_content: str) -> Dict[str, str]:
-        """Extract B200 prices from text content using regex patterns"""
+        """Extract B200 prices from text content - handles 8-GPU instance pricing"""
         prices = {}
         
         # GCP pricing patterns for A4 VMs with B200
-        # Format: "A4 ... $X.XX"
+        # Looking for patterns like "$88.92 / 1 hour" near B200/A4 mentions
         
-        # Find A4 or B200 sections
-        patterns = [
-            r'A4.*?B200.*?\$([0-9.]+)',
-            r'B200.*?A4.*?\$([0-9.]+)',
+        # Pattern to find price mentions
+        price_patterns = [
+            r'a4-.*?\$([0-9.]+)',
             r'nvidia-b200.*?\$([0-9.]+)',
+            r'B200.*?\$([0-9.]+)',
             r'Blackwell.*?\$([0-9.]+)',
+            r'A4.*?\$([0-9.]+)',
+            r'\$([0-9.]+).*?(?:per|/)?\s*(?:1\s+)?hour',
         ]
         
-        for pattern in patterns:
+        for pattern in price_patterns:
             matches = re.findall(pattern, text_content, re.IGNORECASE | re.DOTALL)
             
             for price_str in matches:
                 try:
-                    price = float(price_str)
-                    if 2 < price < 25:
-                        variant_name = "A4 B200 (GCP)"
+                    instance_price = float(price_str)
+                    
+                    # Check if this is an 8-GPU instance price (~$80-200/hr)
+                    if 50 < instance_price < 250:
+                        per_gpu_price = instance_price / 8
+                        variant_name = "A4 B200 (Google Cloud)"
                         if variant_name not in prices:
-                            prices[variant_name] = f"${price:.2f}/hr"
-                            print(f"        Pattern ✓ {variant_name} = ${price:.2f}/hr")
-                            break
+                            prices[variant_name] = f"${per_gpu_price:.2f}/hr"
+                            print(f"        Pattern ✓ {variant_name} = ${per_gpu_price:.2f}/hr (from ${instance_price:.2f}/instance ÷ 8 GPUs)")
+                            return prices  # Found valid price, return immediately
+                    # Already per-GPU price
+                    elif 5 < instance_price < 30:
+                        variant_name = "A4 B200 (Google Cloud)"
+                        if variant_name not in prices:
+                            prices[variant_name] = f"${instance_price:.2f}/hr"
+                            print(f"        Pattern ✓ {variant_name} = ${instance_price:.2f}/hr")
+                            return prices
                 except ValueError:
                     continue
         
