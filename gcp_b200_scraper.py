@@ -27,6 +27,15 @@ class GCPB200Scraper:
             "https://cloud.google.com/compute/gpus-pricing",
             "https://cloud.google.com/compute/vm-instance-pricing",
         ]
+        # Vantage.sh URLs for multiple GCP regions - A4 instances have B200 GPUs
+        self.vantage_regions = [
+            ("us-central1", "https://instances.vantage.sh/gcp/a4-ultragpu-8g?region=us-central1"),
+            ("us-east4", "https://instances.vantage.sh/gcp/a4-ultragpu-8g?region=us-east4"),
+            ("us-west1", "https://instances.vantage.sh/gcp/a4-ultragpu-8g?region=us-west1"),
+            ("europe-west4", "https://instances.vantage.sh/gcp/a4-ultragpu-8g?region=europe-west4"),
+            ("asia-east1", "https://instances.vantage.sh/gcp/a4-ultragpu-8g?region=asia-east1"),
+        ]
+        self.vantage_base = "https://instances.vantage.sh/gcp/a4-ultragpu-8g"
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -36,14 +45,15 @@ class GCPB200Scraper:
         }
     
     def get_b200_prices(self) -> Dict[str, str]:
-        """Main method to extract B200 prices from GCP"""
-        print(f"🔍 Fetching {self.name} B200 pricing...")
+        """Main method to extract B200 prices from GCP - multi-region for volatility"""
+        print(f"🔍 Fetching {self.name} B200 pricing (multi-region)...")
         print("=" * 80)
         
         b200_prices = {}
         
-        # Try multiple methods
+        # Try multiple methods - Vantage multi-region first for volatility
         methods = [
+            ("Vantage Multi-Region Pricing", self._try_vantage_multi_region),
             ("GCP Pricing API", self._try_gcp_pricing_api),
             ("GPU Pricing Page Scraping", self._try_pricing_page),
             ("Selenium Scraper", self._try_selenium_scraper),
@@ -88,6 +98,62 @@ class GCPB200Scraper:
             except:
                 continue
         return False
+    
+    def _try_vantage_multi_region(self) -> Dict[str, str]:
+        """Fetch B200 prices from multiple GCP regions via Vantage.sh for volatility"""
+        b200_prices = {}
+        
+        print(f"    Fetching prices from {len(self.vantage_regions)} GCP regions...")
+        
+        for region_code, url in self.vantage_regions:
+            try:
+                response = requests.get(url, headers=self.headers, timeout=15)
+                
+                if response.status_code == 200:
+                    soup = BeautifulSoup(response.content, 'html.parser')
+                    text_content = soup.get_text()
+                    
+                    # Look for pricing patterns
+                    price_patterns = [
+                        r'\$([0-9]+\.?[0-9]*)\s*(?:per\s+hour|/hr|/hour)',
+                        r'On.?Demand[:\s]+\$([0-9]+\.?[0-9]*)',
+                        r'hourly[:\s]+\$([0-9]+\.?[0-9]*)',
+                        r'\$([0-9]+\.[0-9]+)',
+                    ]
+                    
+                    for pattern in price_patterns:
+                        matches = re.findall(pattern, text_content, re.IGNORECASE)
+                        for match in matches:
+                            try:
+                                price = float(match)
+                                # Instance price for 8 B200 GPUs ~$60-120/hr
+                                if 50 < price < 180:
+                                    per_gpu_price = price / 8
+                                    region_name = region_code.replace('-', ' ').title()
+                                    variant_name = f"A4 B200 ({region_name})"
+                                    b200_prices[variant_name] = f"${per_gpu_price:.2f}/hr"
+                                    print(f"      ✓ {region_code}: ${price:.2f}/instance → ${per_gpu_price:.2f}/GPU")
+                                    break
+                                # Already per-GPU price
+                                elif 5 < price < 25:
+                                    region_name = region_code.replace('-', ' ').title()
+                                    variant_name = f"A4 B200 ({region_name})"
+                                    b200_prices[variant_name] = f"${price:.2f}/hr"
+                                    print(f"      ✓ {region_code}: ${price:.2f}/GPU")
+                                    break
+                            except ValueError:
+                                continue
+                        if region_code.replace('-', ' ').title() in str(b200_prices):
+                            break
+                            
+            except Exception as e:
+                print(f"      ⚠️ {region_code}: Error - {str(e)[:30]}")
+                continue
+        
+        if b200_prices:
+            print(f"    Found prices from {len(b200_prices)} regions")
+        
+        return b200_prices
     
     def _try_gcp_pricing_api(self) -> Dict[str, str]:
         """Try GCP Pricing API endpoints"""
