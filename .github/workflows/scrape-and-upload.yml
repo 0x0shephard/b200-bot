@@ -52,6 +52,12 @@ jobs:
           python run_all_scrapers.py
         continue-on-error: false
 
+      - name: Run GetDeploying B200 scraper
+        run: |
+          echo "🔍 Running GetDeploying B200 scraper..."
+          python getdeploying_b200_scraper.py
+        continue-on-error: false
+
       - name: Calculate weighted index
         run: |
           echo "📊 Calculating B200 weighted index..."
