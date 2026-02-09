@@ -65,46 +65,161 @@ class B200IndexCalculator:
         }
         
         # Non-hyperscaler weights based on B200 revenue (must sum to 1.0)
-        # Revenue data from research: Nebius $73M, Crusoe $45M, HPC-AI $5.1M, Vultr $4.5M,
-        # RunPod $0.6M, Cirrascale $0.56M, GreenAI $0.47M, Civo $0.4M, ComputePrices ~$0.1M (est)
-        # Total: ~$129.73M
+        # Revenue data from research + web estimates (Q3 2025 quarterly B200 revenue):
+        # - Lambda Labs: ~$130M quarterly (from $520M annual, ~25% B200 share) 
+        # - Nebius: $73M quarterly B200 revenue
+        # - Crusoe: $45M quarterly B200 revenue  
+        # - RunPod: ~$30M quarterly (from $120M ARR, ~25% B200)
+        # - Vast.ai: ~$10M quarterly (marketplace, B200 growing)
+        # - HPC-AI: $5.1M quarterly
+        # - Vultr: $4.5M quarterly
+        # - Verda: $3.75M quarterly
+        # - Sesterce: ~$2M quarterly (est. EU provider)
+        # - Cirrascale: $0.56M quarterly
+        # - Civo: $0.4M quarterly
+        # - GreenAI Cloud: $0.47M quarterly
+        # - Packet.ai: ~$1M quarterly (est. new provider)
+        # - ComputePrices: ~$0.1M (aggregator)
+        # Total: ~$305.88M quarterly
         self.non_hyperscaler_weights = {
-            "Nebius": 0.56,         # $73M / $129.73M ≈ 56%
-            "Crusoe": 0.35,         # $45M / $129.73M ≈ 35%
-            "HPC-AI": 0.04,         # $5.1M / $129.73M ≈ 4%
-            "Vultr": 0.035,         # $4.5M / $129.73M ≈ 3.5%
-            "Civo": 0.003,          # $0.4M - now non-hyperscaler
-            "RunPod": 0.005,        # $0.6M
-            "Cirrascale": 0.004,    # $0.56M
-            "GreenAI Cloud": 0.003, # $0.47M
-            "ComputePrices": 0.001, # Est ~$0.1M (aggregator)
+            "Lambda Labs": 0.425,    # $130M / $305.88M ≈ 42.5%
+            "Nebius": 0.239,         # $73M / $305.88M ≈ 23.9%
+            "Crusoe": 0.147,         # $45M / $305.88M ≈ 14.7%
+            "RunPod": 0.098,         # $30M / $305.88M ≈ 9.8%
+            "Vast.ai": 0.033,        # $10M / $305.88M ≈ 3.3%
+            "HPC-AI": 0.017,         # $5.1M / $305.88M ≈ 1.7%
+            "Vultr": 0.015,          # $4.5M / $305.88M ≈ 1.5%
+            "Verda": 0.012,          # $3.75M / $305.88M ≈ 1.2%
+            "Sesterce": 0.007,       # $2M / $305.88M ≈ 0.7%
+            "Cirrascale": 0.002,     # $0.56M / $305.88M ≈ 0.2%
+            "Civo": 0.001,           # $0.4M / $305.88M ≈ 0.1%
+            "GreenAI Cloud": 0.002,  # $0.47M / $305.88M ≈ 0.15%
+            "Packet.ai": 0.003,      # $1M / $305.88M ≈ 0.3%
+            "ComputePrices": 0.0003, # ~$0.1M (aggregator)
         }
     
     def load_all_prices(self) -> Dict[str, float]:
-        """Load all B200 prices from JSON files"""
+        """Load all B200 prices from JSON files and average with GetDeploying data"""
         prices = {}
         
-        # Find all *_b200_prices.json files
+        # First, load prices from dedicated provider scrapers
         json_files = list(self.b200_dir.glob("*_b200_prices.json"))
+        # Exclude getdeploying from dedicated scrapers (we'll handle it separately)
+        json_files = [f for f in json_files if 'getdeploying' not in f.name.lower()]
         
-        print(f"📂 Found {len(json_files)} B200 price files\n")
+        print(f"📂 Found {len(json_files)} dedicated B200 price files\n")
         
+        dedicated_prices = {}
         for json_file in json_files:
             try:
                 with open(json_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     provider = data.get("provider", json_file.stem.replace("_b200_prices", ""))
                     
+                    # Normalize provider names
+                    provider = self._normalize_provider_name(provider)
+                    
                     # Extract price value
                     price = self._extract_price_from_data(data)
                     
                     if price and price > 0:
-                        prices[provider] = price
-                        print(f"   ✓ {provider:20s} ${price:.2f}/hr")
+                        dedicated_prices[provider] = price
+                        print(f"   ✓ {provider:20s} ${price:.2f}/hr (dedicated scraper)")
             except Exception as e:
                 print(f"   ✗ Error loading {json_file}: {e}")
         
+        # Now load GetDeploying prices
+        getdeploying_prices = self._load_getdeploying_prices()
+        
+        # Average prices for providers that appear in both sources
+        print(f"\n📊 Averaging prices from both sources...\n")
+        
+        all_providers = set(dedicated_prices.keys()) | set(getdeploying_prices.keys())
+        
+        for provider in all_providers:
+            dedicated_price = dedicated_prices.get(provider)
+            getdeploying_price = getdeploying_prices.get(provider)
+            
+            if dedicated_price and getdeploying_price:
+                # Average both prices
+                avg_price = (dedicated_price + getdeploying_price) / 2
+                prices[provider] = avg_price
+                print(f"   ⚖️  {provider:20s} ${avg_price:.2f}/hr (avg of ${dedicated_price:.2f} + ${getdeploying_price:.2f})")
+            elif dedicated_price:
+                # Only dedicated scraper price
+                prices[provider] = dedicated_price
+                print(f"   📋 {provider:20s} ${dedicated_price:.2f}/hr (dedicated only)")
+            elif getdeploying_price:
+                # Only GetDeploying price
+                prices[provider] = getdeploying_price
+                print(f"   🌐 {provider:20s} ${getdeploying_price:.2f}/hr (getdeploying only)")
+        
         return prices
+    
+    def _load_getdeploying_prices(self) -> Dict[str, float]:
+        """Load prices from GetDeploying aggregator"""
+        getdeploying_file = self.b200_dir / "getdeploying_b200_prices.json"
+        prices = {}
+        
+        if not getdeploying_file.exists():
+            print("   ⚠️  GetDeploying price file not found")
+            return prices
+        
+        try:
+            with open(getdeploying_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+            provider_prices = data.get("prices", {})
+            print(f"\n📂 Found {len(provider_prices)} providers in GetDeploying data\n")
+            
+            for provider, price_data in provider_prices.items():
+                # Normalize provider name
+                provider = self._normalize_provider_name(provider)
+                
+                # Extract price_per_gpu
+                if isinstance(price_data, dict):
+                    price = price_data.get("price_per_gpu", 0)
+                else:
+                    price = float(price_data)
+                
+                if price and price > 0:
+                    prices[provider] = price
+                    print(f"   ✓ {provider:20s} ${price:.2f}/hr (getdeploying)")
+                    
+        except Exception as e:
+            print(f"   ✗ Error loading GetDeploying data: {e}")
+        
+        return prices
+    
+    def _normalize_provider_name(self, name: str) -> str:
+        """Normalize provider names to match across sources"""
+        name_map = {
+            "aws": "AWS",
+            "oracle": "Oracle",
+            "oracle cloud": "Oracle",
+            "google cloud": "Google Cloud",
+            "gcp": "Google Cloud",
+            "google_cloud": "Google Cloud",
+            "coreweave": "CoreWeave",
+            "nebius": "Nebius",
+            "crusoe": "Crusoe",
+            "hpc-ai": "HPC-AI",
+            "hpcai": "HPC-AI",
+            "vultr": "Vultr",
+            "civo": "Civo",
+            "runpod": "RunPod",
+            "cirrascale": "Cirrascale",
+            "greenai": "GreenAI Cloud",
+            "greenai cloud": "GreenAI Cloud",
+            "green ai cloud": "GreenAI Cloud",
+            "computeprices": "ComputePrices",
+            "vast.ai": "Vast.ai",
+            "lambda labs": "Lambda Labs",
+            "sesterce": "Sesterce",
+            "packet.ai": "Packet.ai",
+            "verda": "Verda",
+        }
+        return name_map.get(name.lower(), name)
     
     def _extract_price_from_data(self, data: Dict) -> float:
         """Extract price value from provider data"""
