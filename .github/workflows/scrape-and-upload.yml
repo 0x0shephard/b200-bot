@@ -1,12 +1,12 @@
-name: Scrape B200 Prices and Upload to Supabase & Oracle
+name: Scrape B200 Prices and Upload to Supabase & ByteStrike CuOracle
 
 on:
   # Run manually via workflow dispatch
   workflow_dispatch:
 
-  # Run on a schedule (every 4 hours)
+  # Run frequently enough to keep the 1 hour CuOracleAdapter maxAge fresh.
   schedule:
-    - cron: '0 */4 * * *'  # At minute 0 past every 4th hour
+    - cron: '*/30 * * * *'
 
   # Run on push to main branches (optional - remove if not needed)
   push:
@@ -90,39 +90,44 @@ jobs:
           echo "📤 Pushing data to Supabase..."
           python push_to_supabase.py
 
-      - name: Push to Oracle (Blockchain)
+      - name: Push B200 index to ByteStrike CuOracle
         env:
           SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          SEPOLIA_FALLBACK_RPC_URL: https://ethereum-sepolia-rpc.publicnode.com
           ORACLE_UPDATER_PRIVATE_KEY: ${{ secrets.ORACLE_UPDATER_PRIVATE_KEY }}
-          MULTI_ASSET_ORACLE_ADDRESS: ${{ secrets.MULTI_ASSET_ORACLE_ADDRESS }}
-          ORACLE_DECIMALS: ${{ secrets.ORACLE_DECIMALS }}
+          CU_ORACLE_ADDRESS: ${{ secrets.CU_ORACLE_ADDRESS }}
+          ORACLE_REVEAL_WAIT_SECONDS: "3"
         run: |
-          echo "⛓️  Pushing data to Oracle (Blockchain)..."
+          echo "⛓️  Pushing B200 index to ByteStrike CuOracle..."
 
           # Extract the weighted index price from the JSON file
           PRICE=$(python -c "import json; data=json.load(open('b200_weighted_index.json')); print(data['final_index_price'])")
 
           echo "💰 B200 Weighted Index Price: \$${PRICE}/hr"
-          echo "📤 Updating on-chain oracle..."
+          echo "📤 Committing and revealing on-chain oracle price..."
 
-          python update_to_oracle.py $PRICE
+          python update_to_oracle.py "$PRICE"
 
-      - name: Update H200 Provider Prices to Oracle
+      - name: Push Oracle and AWS B200 provider prices to ByteStrike CuOracle
         env:
           SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          SEPOLIA_FALLBACK_RPC_URL: https://ethereum-sepolia-rpc.publicnode.com
           ORACLE_UPDATER_PRIVATE_KEY: ${{ secrets.ORACLE_UPDATER_PRIVATE_KEY }}
-          MULTI_ASSET_ORACLE_ADDRESS: ${{ secrets.MULTI_ASSET_ORACLE_ADDRESS }}
+          CU_ORACLE_ADDRESS: ${{ secrets.CU_ORACLE_ADDRESS }}
+          ORACLE_REVEAL_WAIT_SECONDS: "3"
         run: |
-          echo "⛓️  Updating H200 provider prices to Oracle..."
+          echo "⛓️  Pushing Oracle and AWS B200 provider prices to ByteStrike CuOracle..."
           python update_to_oracle_single.py
 
-      - name: Update H200 Provider Prices to Oracle (Part 2)
+      - name: Push CoreWeave and GCP B200 provider prices to ByteStrike CuOracle
         env:
           SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          SEPOLIA_FALLBACK_RPC_URL: https://ethereum-sepolia-rpc.publicnode.com
           ORACLE_UPDATER_PRIVATE_KEY: ${{ secrets.ORACLE_UPDATER_PRIVATE_KEY }}
-          MULTI_ASSET_ORACLE_ADDRESS: ${{ secrets.MULTI_ASSET_ORACLE_ADDRESS }}
+          CU_ORACLE_ADDRESS: ${{ secrets.CU_ORACLE_ADDRESS }}
+          ORACLE_REVEAL_WAIT_SECONDS: "3"
         run: |
-          echo "⛓️  Updating H200 provider prices to Oracle (Part 2)..."
+          echo "⛓️  Pushing CoreWeave and GCP B200 provider prices to ByteStrike CuOracle..."
           python update_to_oracle_single_part2.py
 
       - name: Upload artifacts (optional - for debugging)
@@ -135,14 +140,14 @@ jobs:
             b200_normalized_prices.json
             b200_weighted_index.json
             b200_oracle_update_log.json
-            h200_provider_price_updates.json
+            b200_provider_price_updates.json
           retention-days: 7
 
       - name: Summary
         if: success()
         run: |
           echo "✅ Workflow completed successfully!"
-          echo "📊 Data has been scraped and uploaded to Supabase & Oracle"
+          echo "📊 Data has been scraped and uploaded to Supabase & ByteStrike CuOracle"
 
           if [ -f "b200_weighted_index.json" ]; then
             INDEX_PRICE=$(python -c "import json; data=json.load(open('b200_weighted_index.json')); print(f\"\${data['final_index_price']:.2f}\")")
@@ -153,6 +158,6 @@ jobs:
             echo "📝 B200 Oracle update log created"
           fi
 
-          if [ -f "h200_provider_price_updates.json" ]; then
-            echo "📝 H200 provider prices updated on Oracle"
+          if [ -f "b200_provider_price_updates.json" ]; then
+            echo "📝 B200 provider prices updated on ByteStrike CuOracle"
           fi
