@@ -14,6 +14,10 @@ on:
       - master
       - update1
 
+concurrency:
+  group: b200-cuoracle-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   scrape-and-upload:
     runs-on: ubuntu-latest

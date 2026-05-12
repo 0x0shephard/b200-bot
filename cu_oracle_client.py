@@ -275,13 +275,15 @@ class CuOracleClient:
             )
         return int(price), int(last_updated)
 
-    def _build_fee_fields(self) -> Dict[str, int]:
+    def _build_fee_fields(self, multiplier_bps: int = 10_000) -> Dict[str, int]:
         priority_gwei = float(os.getenv("ORACLE_MAX_PRIORITY_FEE_GWEI", "0.05"))
         priority_fee = self.w3.to_wei(priority_gwei, "gwei")
         gas_price = self.w3.eth.gas_price
         latest_block = self.w3.eth.get_block("latest")
         base_fee = latest_block.get("baseFeePerGas", gas_price)
         max_fee = max(int(base_fee) * 2 + int(priority_fee), int(gas_price) + int(priority_fee))
+        max_fee = (int(max_fee) * multiplier_bps) // 10_000
+        priority_fee = (int(priority_fee) * multiplier_bps) // 10_000
         return {
             "maxFeePerGas": int(max_fee),
             "maxPriorityFeePerGas": int(priority_fee),
@@ -294,26 +296,50 @@ class CuOracleClient:
             return self.w3.eth.get_transaction_count(self.address)
 
     def _send_transaction(self, func, gas_limit: int, nonce: Optional[int] = None) -> Tuple[str, dict]:
-        tx = func.build_transaction(
-            {
-                "from": self.address,
-                "nonce": self._next_nonce() if nonce is None else nonce,
-                "gas": gas_limit,
-                "chainId": self.chain_id,
-                **self._build_fee_fields(),
-            }
-        )
-        signed = self.account.sign_transaction(tx)
-        raw_tx = getattr(signed, "raw_transaction", getattr(signed, "rawTransaction", signed))
-        tx_hash = self.w3.eth.send_raw_transaction(raw_tx)
+        tx_nonce = self._next_nonce() if nonce is None else nonce
         timeout = int(os.getenv("ORACLE_TX_TIMEOUT_SECONDS", "300"))
-        try:
-            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=timeout)
-        except TimeExhausted as exc:
-            raise TimeoutError(
-                f"Transaction {tx_hash.hex()} was not mined after {timeout}s"
-            ) from exc
-        return tx_hash.hex(), dict(receipt)
+        max_retries = int(os.getenv("ORACLE_TX_MAX_RETRIES", "4"))
+        bump_bps = int(os.getenv("ORACLE_REPLACEMENT_FEE_BUMP_BPS", "1250"))
+
+        for attempt in range(max_retries + 1):
+            multiplier_bps = 10_000 + (attempt * bump_bps)
+            tx = func.build_transaction(
+                {
+                    "from": self.address,
+                    "nonce": tx_nonce,
+                    "gas": gas_limit,
+                    "chainId": self.chain_id,
+                    **self._build_fee_fields(multiplier_bps=multiplier_bps),
+                }
+            )
+            signed = self.account.sign_transaction(tx)
+            raw_tx = getattr(signed, "raw_transaction", getattr(signed, "rawTransaction", signed))
+
+            try:
+                tx_hash = self.w3.eth.send_raw_transaction(raw_tx)
+                receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=timeout)
+                return tx_hash.hex(), dict(receipt)
+            except TimeExhausted as exc:
+                raise TimeoutError(
+                    f"Transaction {tx_hash.hex()} was not mined after {timeout}s"
+                ) from exc
+            except Exception as exc:
+                message = str(exc).lower()
+                if "replacement transaction underpriced" in message and attempt < max_retries:
+                    print(
+                        "  RPC rejected tx as underpriced replacement; "
+                        f"retrying nonce {tx_nonce} with higher fees..."
+                    )
+                    time.sleep(2)
+                    continue
+                if "nonce too low" in message and nonce is None and attempt < max_retries:
+                    tx_nonce = self._next_nonce()
+                    print(f"  RPC nonce moved; retrying with nonce {tx_nonce}...")
+                    time.sleep(2)
+                    continue
+                raise
+
+        raise RuntimeError("unreachable transaction retry state")
 
     def _sleep_until_commit_allowed(self, asset_id: str) -> None:
         last_commit = self.contract.functions.lastCommitTimestamp(asset_id).call()
