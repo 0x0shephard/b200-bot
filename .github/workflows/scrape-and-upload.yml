@@ -6,7 +6,8 @@ on:
 
   # Run frequently enough to keep the 1 hour CuOracleAdapter maxAge fresh.
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0,40 0-23/2 * * *'  # Runs at :00 and :40 on even UTC hours
+    - cron: '20 1-23/2 * * *'    # Runs at :20 on odd UTC hours
 
   # Run on push to main branches (optional - remove if not needed)
   push:
