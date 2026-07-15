@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-24 17:16:08",
+  "timestamp": "2026-07-15 17:48:16",
   "provider": "Civo",
   "providers": {
     "Civo": {
@@ -9,7 +9,7 @@
         "B200 (Civo)": {
           "gpu_model": "B200",
           "gpu_memory": "180GB",
-          "price_per_hour": 27.92,
+          "price_per_hour": 35.92,
           "currency": "USD",
           "availability": "on-demand"
         }

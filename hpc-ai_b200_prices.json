@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-24 17:17:04",
+  "timestamp": "2026-07-15 17:49:56",
   "provider": "HPC-AI",
   "providers": {
     "HPC-AI": {
@@ -9,7 +9,7 @@
         "B200 (HPC-AI)": {
           "gpu_model": "B200",
           "gpu_memory": "180GB",
-          "price_per_hour": 1.49,
+          "price_per_hour": 4.0,
           "currency": "USD",
           "availability": "on-demand"
         }

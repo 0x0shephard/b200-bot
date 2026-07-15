@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-24 17:18:15",
+  "timestamp": "2026-07-15 17:51:14",
   "base_model": {
     "name": "NVIDIA B200",
     "memory_gb": 180,
@@ -7,18 +7,18 @@
     "relative_performance": 1.0
   },
   "statistics": {
-    "count": 12,
-    "min": 1.49,
-    "max": 42.0,
-    "average": 11.789166666666667,
-    "median": 5.98,
-    "most_expensive_provider": "CoreWeave",
-    "cheapest_provider": "HPC-AI"
+    "count": 13,
+    "min": 2.14,
+    "max": 68.0,
+    "average": 18.05923076923077,
+    "median": 14.24,
+    "cheapest_provider": "ComputePrices",
+    "most_expensive_provider": "Vultr"
   },
   "providers": {
     "AWS": {
-      "original_price": 9.66,
-      "normalized_price": 9.66,
+      "original_price": 14.24,
+      "normalized_price": 14.24,
       "variant": "P6-B200 (AWS) (180GB)",
       "source": ""
     },
@@ -29,14 +29,14 @@
       "source": ""
     },
     "Civo": {
-      "original_price": 27.92,
-      "normalized_price": 27.92,
+      "original_price": 35.92,
+      "normalized_price": 35.92,
       "variant": "B200 (Civo) (180GB)",
       "source": ""
     },
     "ComputePrices": {
-      "original_price": 2.49,
-      "normalized_price": 2.49,
+      "original_price": 2.14,
+      "normalized_price": 2.14,
       "variant": "B200 (ComputePrices) (180GB)",
       "source": ""
     },
@@ -65,27 +65,33 @@
       "source": ""
     },
     "HPC-AI": {
-      "original_price": 1.49,
-      "normalized_price": 1.49,
+      "original_price": 4.0,
+      "normalized_price": 4.0,
       "variant": "B200 (HPC-AI) (180GB)",
       "source": ""
     },
     "Nebius": {
-      "original_price": 5.5,
-      "normalized_price": 5.5,
+      "original_price": 3.95,
+      "normalized_price": 3.95,
       "variant": "NVIDIA HGX B200 (180GB)",
+      "source": ""
+    },
+    "Oracle": {
+      "original_price": 15.0,
+      "normalized_price": 15.0,
+      "variant": "BM.GPU.B200.8 (Oracle) (180GB)",
       "source": ""
     },
     "RunPod": {
       "original_price": 5.98,
       "normalized_price": 5.98,
-      "variant": "B200 (180GB)",
+      "variant": "B200 (B200 - Secure) (180GB)",
       "source": ""
     },
     "Vultr": {
-      "original_price": 2.89,
-      "normalized_price": 2.89,
-      "variant": "B200 (Vultr) (180GB)",
+      "original_price": 68.0,
+      "normalized_price": 68.0,
+      "variant": "B200 (NVIDIA_B200) (180GB)",
       "source": ""
     }
   },

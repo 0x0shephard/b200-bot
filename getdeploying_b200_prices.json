@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-07-15 17:52:43",
+  "source": "GetDeploying",
+  "source_url": "https://getdeploying.com/gpus/nvidia-b200",
+  "gpu_model": "B200",
+  "fetch_status": "success",
+  "provider_count": 9,
+  "prices": {
+    "Packet.ai": {
+      "price_per_gpu": 4.83,
+      "price_count": 2,
+      "min_price": 3.75,
+      "max_price": 5.9
+    },
+    "Runpod": {
+      "price_per_gpu": 4.94,
+      "price_count": 3,
+      "min_price": 2.94,
+      "max_price": 5.98
+    },
+    "Lambda Labs": {
+      "price_per_gpu": 5.22,
+      "price_count": 2,
+      "min_price": 3.44,
+      "max_price": 6.99
+    },
+    "Sesterce": {
+      "price_per_gpu": 0.92,
+      "price_count": 1,
+      "min_price": 0.92,
+      "max_price": 0.92
+    },
+    "Civo": {
+      "price_per_gpu": 2.69,
+      "price_count": 1,
+      "min_price": 2.69,
+      "max_price": 2.69
+    },
+    "Nebius": {
+      "price_per_gpu": 7.15,
+      "price_count": 1,
+      "min_price": 7.15,
+      "max_price": 7.15
+    },
+    "Verda": {
+      "price_per_gpu": 6.11,
+      "price_count": 1,
+      "min_price": 6.11,
+      "max_price": 6.11
+    },
+    "Fal.ai": {
+      "price_per_gpu": 6.25,
+      "price_count": 1,
+      "min_price": 6.25,
+      "max_price": 6.25
+    },
+    "Thunder Compute": {
+      "price_per_gpu": 1.38,
+      "price_count": 1,
+      "min_price": 1.38,
+      "max_price": 1.38
+    }
+  },
+  "notes": {
+    "pricing_unit": "USD per GPU per hour",
+    "data_source": "https://getdeploying.com/gpus/nvidia-b200"
+  }
+}

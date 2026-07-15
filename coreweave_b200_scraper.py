@@ -26,6 +26,12 @@ class CoreWeaveB200Scraper:
         self.name = "CoreWeave"
         self.base_url = "https://www.coreweave.com"
         self.pricing_url = "https://www.coreweave.com/pricing"
+        # CoreWeave's B200 pricing page lists the price for a 4-GPU instance,
+        # so a scraped node-price must be divided by the GPU count to get per-GPU.
+        self.gpu_count = 4
+        # A single B200 never rents above this; a reading at/above it is a
+        # multi-GPU node total that needs to be divided down to per-GPU.
+        self.per_gpu_threshold = 20.0
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -56,8 +62,8 @@ class CoreWeaveB200Scraper:
                 if prices:
                     b200_prices.update(prices)
                     print(f"   ✅ Found {len(prices)} B200 prices!")
-                    # Return on first success
-                    return b200_prices
+                    # Return on first success (normalized to per-GPU)
+                    return self._normalize_to_per_gpu(b200_prices)
                 else:
                     print(f"   ❌ No prices found")
             except Exception as e:
@@ -67,7 +73,37 @@ class CoreWeaveB200Scraper:
             print("\n❌ All methods failed - unable to extract B200 pricing")
             return {'Error': 'Unable to fetch B200 pricing from CoreWeave'}
 
-        return b200_prices
+        return self._normalize_to_per_gpu(b200_prices)
+
+    def _normalize_to_per_gpu(self, prices: Dict[str, str]) -> Dict[str, str]:
+        """
+        Normalize scraped prices to per-GPU.
+
+        CoreWeave's B200 pricing page lists the total for a 4-GPU instance, so a
+        scraped value in the node-price range (>= per_gpu_threshold) is divided by
+        the GPU count (4). Values already in the per-GPU range are left unchanged,
+        so this is safe if CoreWeave later exposes a genuine per-GPU price.
+        """
+        if not prices or 'Error' in prices:
+            return prices
+
+        normalized = {}
+        for variant, price_str in prices.items():
+            match = re.search(r'\$([0-9.]+)', str(price_str))
+            if not match:
+                normalized[variant] = price_str
+                continue
+
+            price = float(match.group(1))
+            if price >= self.per_gpu_threshold:
+                per_gpu = price / self.gpu_count
+                normalized[variant] = f"${per_gpu:.2f}/hr"
+                print(f"      🔧 Normalized {variant}: ${price:.2f} "
+                      f"({self.gpu_count}-GPU node) → ${per_gpu:.2f}/GPU")
+            else:
+                normalized[variant] = f"${price:.2f}/hr"
+
+        return normalized
 
     def _try_api(self) -> Dict[str, str]:
         """Try CoreWeave API endpoints"""

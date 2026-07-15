@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-24 17:16:03",
+  "timestamp": "2026-07-15 17:48:10",
   "provider": "AWS",
   "providers": {
     "AWS": {
@@ -9,7 +9,7 @@
         "P6-B200 (AWS)": {
           "gpu_model": "B200",
           "gpu_memory": "180GB",
-          "price_per_hour": 9.66,
+          "price_per_hour": 14.24,
           "currency": "USD",
           "availability": "on-demand"
         }

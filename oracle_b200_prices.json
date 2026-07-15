@@ -1,15 +1,15 @@
 {
-  "timestamp": "2026-07-15 17:49:00",
-  "provider": "CoreWeave",
+  "timestamp": "2026-07-15 17:51:12",
+  "provider": "Oracle",
   "providers": {
-    "CoreWeave": {
-      "name": "CoreWeave",
+    "Oracle": {
+      "name": "Oracle",
       "url": "",
       "variants": {
-        "B200 (CoreWeave)": {
+        "BM.GPU.B200.8 (Oracle)": {
           "gpu_model": "B200",
           "gpu_memory": "180GB",
-          "price_per_hour": 10.5,
+          "price_per_hour": 15.0,
           "currency": "USD",
           "availability": "on-demand"
         }

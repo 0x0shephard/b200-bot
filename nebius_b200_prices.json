@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-24 17:16:35",
+  "timestamp": "2026-07-15 17:48:50",
   "provider": "Nebius",
   "providers": {
     "Nebius": {
@@ -9,7 +9,7 @@
         "NVIDIA HGX B200": {
           "gpu_model": "B200",
           "gpu_memory": "180GB",
-          "price_per_hour": 5.5,
+          "price_per_hour": 3.95,
           "currency": "USD",
           "availability": "on-demand"
         }

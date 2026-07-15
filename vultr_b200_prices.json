@@ -1,15 +1,15 @@
 {
-  "timestamp": "2025-12-24 17:16:41",
+  "timestamp": "2026-07-15 17:48:54",
   "provider": "Vultr",
   "providers": {
     "Vultr": {
       "name": "Vultr",
       "url": "",
       "variants": {
-        "B200 (Vultr)": {
+        "B200 (NVIDIA_B200)": {
           "gpu_model": "B200",
           "gpu_memory": "180GB",
-          "price_per_hour": 2.89,
+          "price_per_hour": 68.0,
           "currency": "USD",
           "availability": "on-demand"
         }

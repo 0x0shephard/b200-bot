@@ -153,8 +153,30 @@ class B200IndexCalculator:
                 # Only GetDeploying price
                 prices[provider] = getdeploying_price
                 print(f"   🌐 {provider:20s} ${getdeploying_price:.2f}/hr (getdeploying only)")
-        
-        return prices
+
+        return self._filter_implausible_prices(prices)
+
+    def _filter_implausible_prices(self, prices: Dict[str, float]) -> Dict[str, float]:
+        """
+        Defensive sanity guard: drop any provider whose per-GPU price is
+        physically implausible for a single B200 before it reaches the weighted
+        index. This protects the index from a single bad scrape (e.g. an
+        un-normalized multi-GPU node price) poisoning the final number.
+
+        The band is intentionally wide so it is a no-op in normal operation and
+        only fires on values no single B200 could legitimately have. It does not
+        change provider weights or the provider set — it just skips a poisoned
+        reading for the current run.
+        """
+        MIN_PER_GPU, MAX_PER_GPU = 0.50, 25.0
+        sane_prices = {}
+        for provider, price in prices.items():
+            if MIN_PER_GPU <= price <= MAX_PER_GPU:
+                sane_prices[provider] = price
+            else:
+                print(f"   🚫 Skipping {provider}: ${price:.2f}/hr is outside the plausible "
+                      f"per-GPU range (${MIN_PER_GPU:.2f}-${MAX_PER_GPU:.2f}) — likely a scrape error")
+        return sane_prices
     
     def _load_getdeploying_prices(self) -> Dict[str, float]:
         """Load prices from GetDeploying aggregator"""
