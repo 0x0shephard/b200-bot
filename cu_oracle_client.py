@@ -210,7 +210,9 @@ class CuOracleClient:
             self.owner.lower() == self.address.lower()
             or self.contract.functions.allowedRoles(self.address).call()
         )
-        self.can_reveal = self.owner.lower() == self.address.lower()
+        self.can_reveal = self.owner.lower() == self.address.lower() or bool(
+            self.contract.functions.allowedRoles(self.address).call()
+        )
 
     def _connect(self, rpc_url: Optional[str]) -> Tuple[Web3, str]:
         errors: List[str] = []
@@ -256,7 +258,7 @@ class CuOracleClient:
             )
         if not self.can_reveal:
             raise PermissionError(
-                f"{self.address} cannot reveal prices. CuOracle.updatePrices is owner-only."
+                f"{self.address} is neither the CuOracle owner nor an allowed publisher role."
             )
 
     def is_supported_asset(self, asset_id: str) -> bool:
